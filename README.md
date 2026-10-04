@@ -10,9 +10,9 @@ Grupo 3 Calculo https://drive.google.com/drive/folders/1SCKvGheOEGFVTpuj5IVzfwji
 
 Grupo 4 Historia https://drive.google.com/drive/folders/1Aq7YVYID2R4sCj8SixxIoWNLIBtdj9Gw?usp=sharing 
 
-Grupo 5 Química https://drive.google.com/drive/folders/1Aq7YVYID2R4sCj8SixxIoWNLIBtdj9Gw?usp=sharing
+Grupo 5 Química https://drive.google.com/drive/folders/1Y7EFuFU1Q-CwwGqCJe86OcupDDj8VeTa?usp=sharing
 
-Grupo 6 Física https://drive.google.com/drive/folders/1Aq7YVYID2R4sCj8SixxIoWNLIBtdj9Gw?usp=sharing 
+Grupo 6 Física https://drive.google.com/drive/folders/1HDZTP-W8im9TS2LRsrX-qBFiI8a_oJE-?usp=sharing 
 
 Grupo 7 Inglés https://drive.google.com/drive/folders/18uVg8856dVuTEpPCzpLrkRJEoTmU3wwe?usp=sharing
 
