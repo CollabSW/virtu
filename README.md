@@ -1,6 +1,12 @@
 # virtu
 Desarrollo de herramienta digital educativa
 
+## Core compartido
+
+Las herramientas reutilizables por los canales de todas las materias viven en [`mobile/src/core/`](mobile/src/core/README.md). QuizEngine se consume con `@/core/quiz`; el glosario aún está pendiente.
+
+Guía SDD: [spec](docs/specs/core/spec.md), [design](docs/specs/core/design.md), [tasks](docs/specs/core/tasks.md), [plan](docs/specs/core/plan.md). [Ejemplo de integración entre materias](mobile/docs/quiz-engine.md).
+
 # Carpetas de documentos
 Grupo 1 - https://drive.google.com/drive/folders/11BhtBG_chRkF-vgQXXLo13rZPbC5T-y3?usp=drive_link
 

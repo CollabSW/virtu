@@ -2,6 +2,12 @@
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
+## Virtu Core — herramientas para todas las materias
+
+Core vive en `src/core/`: herramientas transversales que cada materia consume en su propio canal. QuizEngine se importa desde `@/core/quiz`; el glosario sigue pendiente.
+
+SDD: [spec](../docs/specs/core/spec.md), [design](../docs/specs/core/design.md), [tasks](../docs/specs/core/tasks.md), [plan](../docs/specs/core/plan.md). Contratos y ejemplo de integración: [docs/quiz-engine.md](docs/quiz-engine.md).
+
 ## Get started
 
 1. Install dependencies
