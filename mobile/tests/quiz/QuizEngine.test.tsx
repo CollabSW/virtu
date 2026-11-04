@@ -1,105 +1,83 @@
-import { act, fireEvent, render, renderHook, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { StrictMode } from 'react';
-import { QuizEngine } from '@/core/quiz';
-import type { Question } from '@/core/quiz/types';
-import { quizFixtures } from './fixtures';
-import { useQuiz } from '@/core/quiz/use-quiz';
+import { confirmAnswer, continueQuiz, createQuizState, getQuizResult, QuizScreen, selectOption } from '@/shared/features/quiz/screens/QuizScreen';
+import { ResultScreen } from '@/shared/features/quiz/screens/ResultScreen';
+import { quizFixtures, exampleQuestions } from './fixtures';
 import { describe, expect, it, jest } from '@jest/globals';
 
-const questions: readonly Question[] = [
-  { id: 'one', text: '¿Cuál es la respuesta?', options: [{ id: 'a', text: 'Sí' }, { id: 'b', text: 'No' }], correctOptionId: 'a', explanation: 'La respuesta es sí.' },
-  { id: 'two', text: 'Segunda pregunta', options: [{ id: 'c', text: 'Cierto' }, { id: 'd', text: 'Falso' }], correctOptionId: 'd', explanation: 'La respuesta es falso.' },
-];
-
-describe('QuizEngine', () => {
-  it('reveals no key before confirmation, locks choices, advances explicitly, and completes once', async () => {
-    const onComplete = jest.fn();
-    const onAnswer = jest.fn();
-    const view = await render(<QuizEngine questions={questions} onComplete={onComplete} onAnswer={onAnswer} />);
-    expect(await screen.queryByText('La respuesta es sí.')).toBeNull();
-    await fireEvent.press(await screen.findByRole('radio', { name: 'Sí' }));
-    const confirm = await screen.findByRole('button', { name: /comprobar respuesta/i });
-    await fireEvent.press(confirm);
-    await fireEvent.press(confirm);
-    expect(onAnswer).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText('La respuesta es sí.')).toBeTruthy();
-    expect(JSON.stringify(view.toJSON())).toContain('"disabled":true');
-    await fireEvent.press(await screen.findByRole('button', { name: /continuar/i }));
-    await fireEvent.press(await screen.findByRole('radio', { name: 'Cierto' }));
-    await fireEvent.press(await screen.findByRole('button', { name: /comprobar respuesta/i }));
-    expect(await screen.findByText('Respuesta incorrecta')).toBeTruthy();
-    expect(await screen.findByText('La respuesta es falso.')).toBeTruthy();
-    const next = await screen.findByRole('button', { name: /continuar/i });
-    await fireEvent.press(next);
-    await fireEvent.press(next);
+describe('QuizScreen', () => {
+  it('runs a five-question attempt, hides the key before confirmation, and calls callbacks once', async () => {
+    const onAnswer = jest.fn(); const onComplete = jest.fn();
+    await render(<StrictMode><QuizScreen lessonId="lesson-1" questions={exampleQuestions} title="Cultura general · Pruebas" onAnswer={onAnswer} onComplete={onComplete} /></StrictMode>);
+    expect(await screen.findByText('Cultura general · Pruebas')).toBeTruthy();
+    expect(screen.queryByText(exampleQuestions[0].explanation)).toBeNull();
+    for (let i = 0; i < 5; i++) {
+      await fireEvent.press(await screen.findByRole('radio', { name: exampleQuestions[i].options.find((o) => o.id === exampleQuestions[i].correctOptionId)!.text }));
+      await fireEvent.press(await screen.findByRole('button', { name: /comprobar/i }));
+      expect(onAnswer).toHaveBeenCalledTimes(i + 1);
+      await fireEvent.press(await screen.findByRole('button', { name: /continuar/i }));
+    }
     expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText('50%')).toBeTruthy();
-    expect(await screen.findByText('1 de 2 respuestas correctas')).toBeTruthy();
+    expect(onComplete.mock.calls[0][0]).toMatchObject({ lessonId: 'lesson-1', totalQuestions: 5, score: 5, correctAnswers: 5, passed: true });
+    expect(await screen.findByText('5 de 5')).toBeTruthy();
   });
-
-  it('handles empty quiz safely and supports long question content', async () => {
+  it('rejects invalid lesson and empty/single quizzes without completion', async () => {
+    const done = jest.fn(); const empty = await render(<QuizScreen lessonId="" questions={[]} onComplete={done} />);
+    expect(await screen.findByText(/no se pudo iniciar/i)).toBeTruthy(); expect(done).not.toHaveBeenCalled();
+    await empty.unmount(); await render(<QuizScreen lessonId="lesson" questions={quizFixtures.single} onComplete={done} />);
+    expect(await screen.findByText(/no se pudo iniciar/i)).toBeTruthy(); expect(done).not.toHaveBeenCalled();
+  });
+  it('keeps the mounted question snapshot', async () => {
+    const view = await render(<QuizScreen lessonId="lesson" questions={exampleQuestions} />);
+    await view.rerender(<QuizScreen lessonId="other" questions={exampleQuestions.map((q) => ({ ...q, text: 'Reemplazada' }))} />);
+    expect(await screen.findByText(exampleQuestions[0].text)).toBeTruthy(); expect(screen.queryByText('Reemplazada')).toBeNull();
+  });
+  it('deduplicates same-turn confirms and continues; stale question handlers cannot act on the next question', async () => {
+    const onAnswer = jest.fn();
+    await render(<QuizScreen lessonId="lesson" questions={exampleQuestions} onAnswer={onAnswer} />);
+    const q1Radio = await screen.findByRole('radio', { name: 'Marte' });
+    await fireEvent.press(q1Radio);
+    const oldConfirm = screen.getByRole('button', { name: /comprobar/i });
+    await act(async () => { await fireEvent.press(oldConfirm); await fireEvent.press(oldConfirm); });
+    expect(onAnswer).toHaveBeenCalledTimes(1);
+    const oldContinue = screen.getByRole('button', { name: /continuar/i });
+    await act(async () => { await fireEvent.press(oldContinue); await fireEvent.press(oldContinue); });
+    expect(await screen.findByText('Pregunta 2 de 5')).toBeTruthy();
+    await fireEvent.press(await screen.findByRole('radio', { name: '56' }));
+    await fireEvent.press(oldConfirm);
+    expect(onAnswer).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Respuesta correcta')).toBeNull();
+  });
+  it('uses latest callbacks after rerender and does not duplicate completion in StrictMode', async () => {
+    const oldAnswer = jest.fn(); const latestAnswer = jest.fn(); const oldDone = jest.fn(); const latestDone = jest.fn();
+    const view = await render(<StrictMode><QuizScreen lessonId="lesson" questions={exampleQuestions} onAnswer={oldAnswer} onComplete={oldDone} /></StrictMode>);
+    await view.rerender(<StrictMode><QuizScreen lessonId="lesson" questions={exampleQuestions} onAnswer={latestAnswer} onComplete={latestDone} /></StrictMode>);
+    for (const q of exampleQuestions) {
+      await fireEvent.press(await screen.findByRole('radio', { name: q.options.find((o) => o.id === q.correctOptionId)!.text }));
+      const confirm = await screen.findByRole('button', { name: /comprobar/i });
+      await act(async () => { await fireEvent.press(confirm); await fireEvent.press(confirm); });
+      await fireEvent.press(await screen.findByRole('button', { name: /continuar/i }));
+    }
+    expect(oldAnswer).not.toHaveBeenCalled(); expect(oldDone).not.toHaveBeenCalled();
+    expect(latestAnswer).toHaveBeenCalledTimes(5); expect(latestDone).toHaveBeenCalledTimes(1);
+  });
+  it('renders and completes a long-content five-question attempt', async () => {
     const onComplete = jest.fn();
-    const view = await render(<StrictMode><QuizEngine questions={[]} onComplete={onComplete} /></StrictMode>);
-    expect(await screen.findByText(/no hay preguntas/i)).toBeTruthy();
-    expect(onComplete).toHaveBeenCalledTimes(1);
-    await view.unmount();
-    await render(<QuizEngine questions={quizFixtures.long} />);
+    await render(<QuizScreen lessonId="lesson" questions={quizFixtures.long} onComplete={onComplete} />);
     expect(await screen.findByText(quizFixtures.long[0].text)).toBeTruthy();
-    expect(await screen.findByText(quizFixtures.long[0].options[0].text)).toBeTruthy();
-  });
-
-  it('survives StrictMode without duplicate completion', async () => {
-    const onComplete = jest.fn();
-    await render(<StrictMode><QuizEngine questions={questions.slice(0, 1)} onComplete={onComplete} /></StrictMode>);
-    await fireEvent.press(await screen.findByRole('radio', { name: 'Sí' }));
-    await fireEvent.press(await screen.findByRole('button', { name: /comprobar respuesta/i }));
-    await fireEvent.press(await screen.findByRole('button', { name: /continuar/i }));
+    for (const q of quizFixtures.long) {
+      await fireEvent.press(await screen.findByRole('radio', { name: q.options[0].text }));
+      await fireEvent.press(await screen.findByRole('button', { name: /comprobar/i }));
+      expect(await screen.findByText(q.explanation)).toBeTruthy();
+      await fireEvent.press(await screen.findByRole('button', { name: /continuar/i }));
+    }
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
-
-  it('serializes batched duplicate events and rejects stale actions after advancing', async () => {
-    const onAnswer = jest.fn();
-    const onComplete = jest.fn();
-    type HookProps = { answer: typeof onAnswer; complete: typeof onComplete };
-    const { result, rerender } = await renderHook<ReturnType<typeof useQuiz>, HookProps>(
-      ({ answer, complete }) => useQuiz(questions, answer, complete),
-      { initialProps: { answer: onAnswer, complete: onComplete } },
-    );
-    const staleConfirm = result.current.confirm;
-    await act(() => {
-      result.current.select('a');
-      result.current.confirm();
-      result.current.confirm();
-    });
-    expect(result.current.state.phase).toBe('feedback');
-    expect(result.current.state.answers).toHaveLength(1);
-    expect(onAnswer).toHaveBeenCalledTimes(1);
-    const staleContinue = result.current.continue;
-    await act(() => { staleContinue(); staleContinue(); });
-    expect(result.current.state.index).toBe(1);
-    expect(result.current.state.phase).toBe('answering');
-    await act(() => { staleConfirm(); });
-    expect(result.current.state.answers).toHaveLength(1);
-    const latestAnswer = jest.fn();
-    const latestComplete = jest.fn();
-    await rerender({ answer: latestAnswer, complete: latestComplete });
-    await act(() => { result.current.select('c'); result.current.confirm(); result.current.confirm(); });
-    expect(result.current.state.answers).toHaveLength(2);
-    expect(latestAnswer).toHaveBeenCalledTimes(1);
-    await act(() => { staleContinue(); });
-    expect(result.current.state.phase).toBe('feedback');
-    const oldQuestionContinue = result.current.continue;
-    await act(() => { oldQuestionContinue(); oldQuestionContinue(); });
-    expect(result.current.state.phase).toBe('completed');
-    expect(onComplete).not.toHaveBeenCalled();
-    expect(latestComplete).toHaveBeenCalledTimes(1);
-    expect(result.current.state.answers.map(({ isCorrect }) => isCorrect)).toEqual([true, false]);
-  });
-
-  it('keeps the initial question snapshot when parent passes a new array', async () => {
-    const view = await render(<QuizEngine questions={questions} />);
-    await view.rerender(<QuizEngine questions={[{ ...questions[0], text: 'No reemplazar el intento actual' }]} />);
-    expect(await view.findByText(questions[0].text)).toBeTruthy();
-    expect(view.queryByText('No reemplazar el intento actual')).toBeNull();
+  it('reviews missed answers with their correct solution', async () => {
+    let state = createQuizState('lesson', exampleQuestions);
+    for (const q of exampleQuestions) { state = selectOption(state, q.correctOptionId === q.options[0].id ? q.options[1].id : q.options[0].id); state = confirmAnswer(state); state = continueQuiz(state); }
+    const result = getQuizResult(state);
+    await render(<ResultScreen questions={exampleQuestions} result={result} />);
+    expect(await screen.findByText('Sigue practicando')).toBeTruthy(); expect(await screen.findByText('Respuesta correcta: Marte')).toBeTruthy(); expect(await screen.findByText('0 de 5')).toBeTruthy();
   });
 });

@@ -1,4 +1,65 @@
-# Virtu Core — guía de consumo de QuizEngine
+# Virtu Core 2 — contratos internos de Sprint 1
+
+## Fuente y alcance vigentes
+
+El árbol de la magíster y las tarjetas vigentes de https://trello.com/b/rAeH5rhS/calculo-virtu sustituyen la arquitectura anterior `src/core/quiz/`. El usuario aprobó implementar C2-01/05/10/15/20/21/25 (Matías) y las dependencias locales imprescindibles. Este documento es el contrato interno de C2-25, **no la publicación definitiva de motores para las seis materias**, que corresponde a Sprint 2.
+
+SDD vigente: [spec](specs/core/spec.md), [diseño](specs/core/design.md), [tareas](specs/core/tasks.md), [plan y evidencia](specs/core/plan.md). ERS v1.0 no aportado; no se declara cumplimiento integral.
+
+## Ubicaciones aprobadas
+
+| Archivo relativo a `mobile/src/shared/features/` | Responsabilidad |
+|---|---|
+| `quiz/screens/QuizScreen.tsx` | Contratos TypeScript, validación/snapshot/transiciones/cálculo local, composición del intento y error seguro |
+| `quiz/components/QuestionCard.tsx` | Pregunta, cuatro alternativas, selección y solicitud de confirmar |
+| `quiz/components/FeedbackModal.tsx` | Corrección inmediata, explicación/solución y continuar; no puntaje |
+| `quiz/screens/ResultScreen.tsx` | Aciertos sobre cinco, aprobación y revisión de respuestas/errores |
+| `quiz/quizService.js` | Envío de notas/registro de intentos previsto para Sprint 2; sin implementación ni placeholder mientras falte contrato API |
+| `glossary/screens/GlossaryScreen.tsx` | Lista, búsqueda, detalle heterogéneo y estado sin coincidencias |
+| `glossary/glossaryService.js` | Contrato de datos, selección por materia y filtrado textual local |
+
+Sin archivos auxiliares de producción para tipos, hooks o barrels. Los motores no importan rutas ni materias; cada materia aporta contenido y decide navegación. La lógica local no pertenece al servicio de envío: está en QuizScreen. Tema global: `src/config/theme.js`; navegación: `src/navigation/AppNavigator.tsx`; controles comunes reales: `src/shared/components/{Button,Card,Header,SearchBar}.tsx`. Se reutilizan adaptadores heredados del starter sin afirmar que todo el árbol de Core 1/Backend esté implementado. Timer sin duración documentada: pendiente, no se registra tiempo de intento.
+
+## Cuestionario: contrato
+
+Imports TypeScript desde `@/shared/features/quiz/screens/QuizScreen`. Tipos públicos: Option (id/text), Question (id/text/options/correctOptionId/explanation), QuizAnswer (questionId/optionId/isCorrect), QuizResult (lessonId/totalQuestions/correctAnswers/score/passed/answers). `score` son aciertos 0–5, **no porcentaje**; `totalQuestions` es 5 y `passed` exige al menos 4 aciertos.
+
+Props de pantalla: `lessonId: string`, `questions: readonly Question[]`, `title?`, `onAnswer?`, `onComplete?`. La lección identifica el cuestionario completo. El intento copia los datos al montar; cambiar props no inicia otro intento, usar una `key` distinta. Debe haber exactamente cinco preguntas de cuatro alternativas, IDs únicos/no vacíos, textos/explicaciones no vacíos y una clave correcta existente. Cero/una pregunta son inválidos, no finalizan ni emiten onComplete. Los errores se presentan sin dejar caer la pantalla.
+
+Ejemplo de consumidor local (recibe contenido real de la materia, no lo inventa):
+
+```tsx
+import { QuizScreen, type Question, type QuizResult } from '@/shared/features/quiz/screens/QuizScreen';
+
+export function LessonQuiz({ lessonId, questions }: { lessonId: string; questions: readonly Question[] }) {
+  function receiveResult(result: QuizResult) {
+    console.info(result.lessonId, `${result.score}/5`, result.passed);
+  }
+  return <QuizScreen key={lessonId} lessonId={lessonId} questions={questions} onComplete={receiveResult} />;
+}
+```
+
+Selección única → confirmar sin posibilidad de edición → feedback/solución → continuar → siguiente pregunta/resultados. No se revela la explicación antes de confirmar. Resultado solo para intento completo; permite revisar aciertos/errores y soluciones de incorrectas. Los callbacks son notificaciones síncronas, una por respuesta/intento, y no deben lanzar ni recalcular la nota.
+
+## Glosario: contrato mínimo de integración
+
+`GlossaryScreen` recibe `entries`, `subject?` y `title?`. Los datos se aportan desde el consumidor; no hay carga remota ni datos ficticios internos. `getGlossaryEntries(entries, subject?)` y `filterGlossaryEntries(entries, query, subject?)` en `glossaryService.js` seleccionan y filtran datos locales. La búsqueda recorre campos textuales del contenido sin distinguir mayúsculas; consulta vacía muestra todos los elementos seleccionados. Los opcionales no deben causar errores; sin coincidencias se muestra un mensaje y se permite limpiar.
+
+Cada entrada tiene `id`, `subject` y `title`, además de campos opcionales de contenido: `definition`, `topic`, `rendering`, `date`, `character`, `timeline`, `concept`, `videoUrl`, `vocabulary`, `audioUrl`, `example`, `front`, `back`, `symbol`, `atomicNumber`, `properties`. `subject`: `calculo`, `historia`, `fisica`, `ingles`, `biologia` o `quimica`. El detalle usa los campos aportados, no se limita a término/definición. Referencias multimedia se muestran como datos en este alcance, no como reproductores inexistentes.
+
+Los ejemplos representativos viven exclusivamente en `mobile/tests/quiz/QuizDemo.tsx`. No son contenido definitivo de las materias. El preview existente `/pruebas` conserva aviso explícito y guard `__DEV__`; release redirige sin cargar datos ficticios.
+
+## Verificación y pendientes
+
+Desde `mobile/`: `npm run lint`, `npm run typecheck`, `npm test -- --runInBand`. Enfocar lógica: `npm test -- --runInBand tests/quiz/quiz-state.test.ts`. Ejecutar Jest y export/Metro secuencialmente. No hacen falta servicios ni variables de entorno. La evidencia nueva y los fallos preexistentes se registran en el plan; no reutilizar conteos históricos como resultado actual.
+
+Sprint 2: API de notas/registro de intentos y publicación/documentación definitiva para seis materias. Pendientes humanos: acuerdos Core 1/Backend, revisión de PR y QA Android/accesibilidad/dispositivos. Sprint 3 no asignado por las fuentes disponibles. No se modificó Trello ni se atribuyeron entregas a otros integrantes.
+
+---
+
+## Registro histórico — contratos y arquitectura sustituidos
+
+El texto siguiente conserva evidencia de ejecuciones previas. Sus imports `@/core/quiz`, porcentajes y aceptación de vacío/una pregunta no son contratos vigentes.
 
 QuizEngine es una herramienta de **Core**, la capa reutilizable que consumen todas las materias en sus propios canales; no pertenece al canal de Cálculo. No consulta APIs ni guarda intentos. SDD: [spec](../../docs/specs/core/spec.md), [design](../../docs/specs/core/design.md), [tasks](../../docs/specs/core/tasks.md) y [plan](../../docs/specs/core/plan.md).
 

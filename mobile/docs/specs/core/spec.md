@@ -1,4 +1,63 @@
-# Virtu Core — especificación
+# Virtu Core 2 — especificación vigente
+
+## Fuente y precedencia
+
+El usuario aprobó implementar las siete tarjetas de Matías y sus dependencias mínimas siguiendo el árbol de la magíster y las descripciones vigentes del tablero https://trello.com/b/rAeH5rhS/calculo-virtu. Estas reglas sustituyen la reorganización anterior a `src/core/quiz/`. El ERS v1.0 y el borrador completo no fueron aportados: no se afirma cumplimiento integral de esos documentos.
+
+## Arquitectura obligatoria del alcance
+
+```text
+mobile/src/shared/features/
+├── quiz/
+│   ├── components/QuestionCard.tsx
+│   ├── components/FeedbackModal.tsx
+│   ├── screens/QuizScreen.tsx
+│   ├── screens/ResultScreen.tsx
+│   └── quizService.js (objetivo Sprint 2, sin implementación ficticia)
+└── glossary/
+    ├── screens/GlossaryScreen.tsx
+    └── glossaryService.js
+```
+
+No agregar archivos auxiliares de producción para tipos, hooks, barrels o motores. No mantener implementaciones ni fachadas en `src/core/quiz/`. `Timer.tsx` pertenece al árbol completo pero su regla temporal no está definida en las tarjetas del alcance: queda pendiente de aclaración, no se inventa duración ni se registra tiempo de intento.
+
+Las features compartidas reciben datos/callbacks; no importan materias ni rutas. Los equipos de materia proporcionan contenido y deciden navegación. Core 1/Backend deben revisar los contratos; esta ejecución no acredita ese acuerdo.
+
+Configuración global en `src/config/theme.js`; navegación existente en `src/navigation/AppNavigator.tsx`, conservando `src/app/_layout.tsx` como puente obligatorio de Expo Router. Controles comunes implementados y consumidos en `src/shared/components/{Button,Card,Header,SearchBar}.tsx`; no deben conocer materias ni transiciones de cuestionario. Se mantienen adaptadores/efectos heredados del starter sin presentarlos como entregables faltantes del árbol. AuthNavigator, apiConfig, MathRenderer, servicios comunes, panel docente y materias permanecen pendientes, no se rellenan con archivos vacíos.
+
+La validación, snapshot, transiciones y cálculo local pertenecen a `QuizScreen.tsx`. `quizService.js` tiene otra responsabilidad explícita: envío de notas y registro de intentos. No alojar allí una máquina de estado para justificar su presencia antes de tener el contrato de API. No se conserva un placeholder del servicio.
+
+## Aceptación de cuestionario — Sprint 1
+
+| ID / tarjeta | Regla obligatoria |
+|---|---|
+| C2-01 | Intento identificado por lección; exactamente cinco preguntas, cuatro opciones por pregunta, una correcta y explicación; contratos TypeScript en archivos del árbol |
+| C2-05 | `QuizScreen` recibe datos por props sin dependencia de una materia; rechaza entradas inválidas con mensaje, sin caída ni intento completado |
+| C2-10 | `FeedbackModal` muestra acierto/error inmediatamente tras confirmar y solución al fallar; no calcula nota |
+| C2-15 | Selección única, confirmación irreversible y sin duplicados; respuesta/explicación no reveladas antes de confirmar; continuar avanza una pregunta |
+| C2-20 | Resultado sobre cinco; aprobado solo con 4/5 o 5/5; pruebas de 0/5, 3/5, 4/5 y 5/5; resultados incompletos rechazados |
+| C2-21 | Fixture válido 5×4 y textos extensos; cero/una pregunta son inválidos, nunca se califican como intentos válidos |
+| C2-25 | Contratos internos de QuizScreen y GlossaryScreen documentados y probados con datos ficticios; publicación formal para seis materias pendiente de Sprint 2 |
+
+IDs/textos no vacíos, preguntas/opciones sin IDs duplicados y clave correcta existente. Validar también formas malformadas de entrada para no confiar únicamente en anotaciones TypeScript. Snapshot de preguntas durante el intento; una `key` nueva inicia otro. Callbacks una vez por respuesta/intento, incluso con StrictMode, acciones duplicadas o handlers retenidos. No hay notificación de completado para entradas inválidas. Resultado permite revisar respuestas y soluciones de errores; el cálculo es único.
+
+## Dependencia mínima de glosario para C2-25
+
+`glossaryService.js` consume datos del llamador y permite búsqueda textual multicampo sin distinguir mayúsculas ni fallar por opcionales. `GlossaryScreen.tsx` presenta lista, consulta limpiable, detalle según datos y estado sin resultados. Ejemplos de Cálculo (temática/título/definición/renderización), Historia (dato/fecha/personaje/línea temporal), Física (concepto/video), Inglés (vocabulario/audio/ejemplo), Biología (flashcard) y Química (propiedades de elemento). No limitar el modelo a term/definition. Reproducción multimedia y contenido final de materias no se inventan.
+
+## Pruebas, entrega y límites
+
+Pruebas/fixtures/demo permanecen en `mobile/tests/`; solo el preview existente protegido por `__DEV__` puede cargarlos desde la app. Debe mostrar aviso de datos ficticios; release no carga el material. No nuevas rutas de demo ni archivos de pruebas obligatorios. No servicios externos ni variables de entorno para las pruebas locales.
+
+Sprint 2: API de notas/registro de intentos en `quizService.js` y publicación/documentación definitiva de motores, según C2-02/25. No implementar llamadas simuladas, endpoints, autenticación, Backend o materias. Sprint 3 no verificable con las fuentes disponibles.
+
+La Definition of Done requiere revisión de PR y prueba funcional; comprobaciones automáticas no sustituyen QA Android/accesibilidad, acuerdos Core 1/Backend ni aprobación del equipo. No modificar Trello, hacer commits o publicar desde esta ejecución. Ver [diseño](design.md), [tareas](tasks.md) y [plan/evidencia](plan.md).
+
+---
+
+## Especificación histórica sustituida
+
+El texto siguiente registra las reglas anteriores (cantidad variable, porcentaje y `src/core/quiz/`); no debe usarse para implementar o aceptar las tarjetas vigentes.
 
 Core es la capa de herramientas reutilizables que todas las materias pueden consumir en sus propios canales. No es el canal de Cálculo ni una colección de pantallas de una materia.
 

@@ -3,9 +3,11 @@ Desarrollo de herramienta digital educativa
 
 ## Core compartido
 
-Las herramientas reutilizables por los canales de todas las materias viven en [`mobile/src/core/`](mobile/src/core/README.md). QuizEngine se consume con `@/core/quiz`; el glosario aún está pendiente.
+Las herramientas reutilizables siguen el árbol de la magíster en `mobile/src/shared/features/`: cuestionarios en `quiz/` y glosario en `glossary/`. El alcance actual es Sprint 1 de las siete tarjetas propuestas para Matías y sus dependencias necesarias; no equivale a completar todos los equipos.
 
-Guía SDD: [spec](docs/specs/core/spec.md), [design](docs/specs/core/design.md), [tasks](docs/specs/core/tasks.md), [plan](docs/specs/core/plan.md). [Ejemplo de integración entre materias](mobile/docs/quiz-engine.md).
+El tema global vive en `mobile/src/config/theme.js`, la navegación implementada en `mobile/src/navigation/AppNavigator.tsx` y los controles comunes en `mobile/src/shared/components/`. El controlador local pertenece a `QuizScreen.tsx`; el servicio de envío de notas/registro de intentos está pendiente de API, no se reemplaza por una máquina de estados. Los adaptadores del starter aún presentes no acreditan las piezas faltantes de Core 1, Backend ni materias.
+
+Guía SDD: [spec](mobile/docs/specs/core/spec.md), [design](mobile/docs/specs/core/design.md), [tasks](mobile/docs/specs/core/tasks.md), [plan y evidencia](mobile/docs/specs/core/plan.md). [Contratos internos y ejemplo](mobile/docs/quiz-engine.md). Las secciones históricas registran una arquitectura anterior, no instrucciones vigentes.
 
 # Carpetas de documentos
 Grupo 1 - https://drive.google.com/drive/folders/11BhtBG_chRkF-vgQXXLo13rZPbC5T-y3?usp=drive_link

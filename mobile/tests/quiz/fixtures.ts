@@ -1,4 +1,4 @@
-import type { Question } from '@/core/quiz/types';
+import type { Question } from '@/shared/features/quiz/screens/QuizScreen';
 
 export const exampleQuestions: readonly Question[] = [
   {
@@ -8,6 +8,7 @@ export const exampleQuestions: readonly Question[] = [
       { id: 'mars', text: 'Marte' },
       { id: 'venus', text: 'Venus' },
       { id: 'jupiter', text: 'Júpiter' },
+      { id: 'saturn', text: 'Saturno' },
     ],
     correctOptionId: 'mars',
     explanation: 'El óxido de hierro de su superficie le da a Marte su color rojizo.',
@@ -19,6 +20,7 @@ export const exampleQuestions: readonly Question[] = [
       { id: '54', text: '54' },
       { id: '56', text: '56' },
       { id: '64', text: '64' },
+      { id: '49', text: '49' },
     ],
     correctOptionId: '56',
     explanation: 'Siete grupos de ocho suman cincuenta y seis.',
@@ -30,6 +32,7 @@ export const exampleQuestions: readonly Question[] = [
       { id: 'co2', text: 'CO₂' },
       { id: 'h2o', text: 'H₂O' },
       { id: 'o2', text: 'O₂' },
+      { id: 'n2', text: 'N₂' },
     ],
     correctOptionId: 'h2o',
     explanation: 'Cada molécula de agua contiene dos átomos de hidrógeno y uno de oxígeno.',
@@ -41,6 +44,7 @@ export const exampleQuestions: readonly Question[] = [
       { id: 'europe', text: 'Europa' },
       { id: 'asia', text: 'Asia' },
       { id: 'africa', text: 'África' },
+      { id: 'america', text: 'América' },
     ],
     correctOptionId: 'asia',
     explanation: 'Japón es un país insular de Asia oriental.',
@@ -52,6 +56,7 @@ export const exampleQuestions: readonly Question[] = [
       { id: 'lungs', text: 'Los pulmones' },
       { id: 'heart', text: 'El corazón' },
       { id: 'liver', text: 'El hígado' },
+      { id: 'kidney', text: 'Los riñones' },
     ],
     correctOptionId: 'heart',
     explanation: 'El corazón impulsa la sangre a través del sistema circulatorio.',
@@ -67,17 +72,15 @@ export const quizFixtures: {
   empty: [],
   single: [exampleQuestions[0]],
   multiple: exampleQuestions,
-  long: [
-    {
-      ...exampleQuestions[0],
-      id: 'long-question',
-      text: `${exampleQuestions[0].text} ${'Lee con atención todos los detalles antes de responder. '.repeat(20)}`,
-      options: exampleQuestions[0].options.map((option) => ({
-        ...option,
-        text: `${option.text}: ${'Una explicación extensa con información adicional para evaluar respuestas de longitud considerable. '.repeat(5)}`,
-      })),
-    },
-  ],
+  long: exampleQuestions.map((question, index) => index === 0 ? {
+    ...question,
+    id: 'long-question',
+    text: `${question.text} ${'Lee con atención todos los detalles antes de responder. '.repeat(20)}`,
+    options: question.options.map((option) => ({
+      ...option,
+      text: `${option.text}: ${'Una explicación extensa con información adicional para evaluar respuestas de longitud considerable. '.repeat(5)}`,
+    })),
+  } : question),
 };
 
 export const quizAnswerFixtures = {

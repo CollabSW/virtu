@@ -1,201 +1,145 @@
 import { describe, expect, it } from '@jest/globals';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
-  calculateScore,
-  confirmAnswer,
-  continueQuiz,
-  createQuizState,
-  getQuizResult,
-  selectOption,
-} from '@/core/quiz/quiz-state';
-import type { Question } from '@/core/quiz/types';
-import { exampleQuestions, quizAnswerFixtures, quizFixtures } from './fixtures';
+  calculateScore, confirmAnswer, continueQuiz, createQuizState, getQuizResult, selectOption,
+} from '../../src/shared/features/quiz/screens/QuizScreen';
+import { filterGlossaryEntries, getGlossaryEntries } from '../../src/shared/features/glossary/glossaryService';
 
-it('provides genuinely long answer options in the long fixture', () => {
-  expect(quizFixtures.long[0].options.every((option) => option.text.length >= 200)).toBe(true);
+const questions = Array.from({ length: 5 }, (_, i) => ({
+  id: `q${i + 1}`, text: `Question ${i + 1}`, explanation: `Explanation ${i + 1}`, correctOptionId: 'a',
+  options: [
+    { id: 'a', text: `Correct ${i}` }, { id: 'b', text: `Wrong ${i}` },
+    { id: 'c', text: `Other ${i}` }, { id: 'd', text: `Last ${i}` },
+  ],
+}));
+
+it('keeps the local controller in QuizScreen, not quizService', () => {
+  const source = readFileSync(resolve(__dirname, '../../src/shared/features/quiz/screens/QuizScreen.tsx'), 'utf8');
+  expect(source).not.toMatch(/from\s+['"].*quizService/);
+  expect([createQuizState, selectOption, confirmAnswer, continueQuiz, getQuizResult, calculateScore].every((fn) => typeof fn === 'function')).toBe(true);
 });
 
-const questions: readonly Question[] = [
-  {
-    id: 'q1',
-    text: 'A long question '.repeat(100),
-    options: [
-      { id: 'a', text: 'Correct' },
-      { id: 'b', text: 'Incorrect' },
-    ],
-    correctOptionId: 'a',
-    explanation: 'Because A is correct.',
-  },
-  {
-    id: 'q2',
-    text: 'Second question?',
-    options: [
-      { id: 'a', text: 'Correct' },
-      { id: 'b', text: 'Incorrect' },
-    ],
-    correctOptionId: 'b',
-    explanation: 'Because B is correct.',
-  },
-];
-
-describe('calculateScore', () => {
-  it('returns bounded integer percentages and defines the empty score as zero', () => {
-    expect(calculateScore(0, 4)).toBe(0);
-    expect(calculateScore(1, 4)).toBe(25);
-    expect(calculateScore(2, 3)).toBe(67);
-    expect(calculateScore(4, 4)).toBe(100);
-    expect(calculateScore(0, 0)).toBe(0);
+describe('quiz service', () => {
+  it('requires a lesson and exactly five questions with four unique options each', () => {
+    expect(() => createQuizState(' ', questions)).toThrow(/lessonId/i);
+    for (const count of [0, 1, 4]) expect(() => createQuizState('lesson', questions.slice(0, count))).toThrow(RangeError);
+    expect(() => createQuizState('lesson', [...questions, questions[0]])).toThrow(RangeError);
+    expect(() => createQuizState('lesson', questions.map((q, i) => i ? q : { ...q, options: q.options.slice(0, 3) }))).toThrow(/four/i);
+    expect(() => createQuizState('lesson', questions.map((q, i) => i ? q : { ...q, options: [...q.options, { id: 'e', text: 'Extra' }] }))).toThrow(/four/i);
+    expect(() => createQuizState('lesson', questions.map((q, i) => i ? q : { ...q, options: q.options.map((o, j) => j ? o : { ...o, text: q.options[1].text }) }))).toThrow(/text/i);
+    expect(() => createQuizState('lesson', questions.map((q, i) => i ? q : { ...q, options: q.options.map((o, j) => j ? o : { ...o, id: q.options[1].id }) }))).toThrow(/id/i);
   });
 
-  it('rejects invalid counts instead of clamping them', () => {
-    for (const [correct, total] of [
-      [-1, 2], [1, -1], [3, 2], [0.5, 2], [1, 0], [Number.NaN, 2], [2, Number.NaN],
-      [Number.POSITIVE_INFINITY, 3], [1, Number.POSITIVE_INFINITY], [Number.NEGATIVE_INFINITY, 3],
-    ]) {
+  it('validates untyped runtime inputs and snapshots question and option arrays', () => {
+    expect(() => createQuizState(null as never, questions)).toThrow(/lessonId/i);
+    expect(() => createQuizState('lesson', null as never)).toThrow(/five/i);
+    const input = questions.map((q) => ({ ...q, options: q.options.map((option) => ({ ...option })) }));
+    const state = createQuizState('lesson-1', input);
+    input[0].text = 'mutated'; input[0].options[0].text = 'mutated';
+    expect(state.questions[0].text).toBe('Question 1');
+    expect(state.questions[0].options[0].text).toBe('Correct 0');
+    expect(Object.isFrozen(state.questions[0].options)).toBe(true);
+  });
+
+  it('rejects malformed question and option data, including legacy validation cases', () => {
+    const invalidQuizzes = [
+      questions.map((q, i) => i ? q : { ...q, id: ' ' }),
+      questions.map((q, i) => i ? q : { ...q, text: '' }),
+      questions.map((q, i) => i ? q : { ...q, explanation: '  ' }),
+      questions.map((q, i) => i ? q : { ...q, correctOptionId: 'missing' }),
+      questions.map((q, i) => i ? q : { ...q, options: null }),
+      questions.map((q, i) => i ? q : { ...q, options: {} }),
+      questions.map((q, i) => i ? q : { ...q, options: q.options.map((option, j) => j ? option : null) }),
+      questions.map((q, i) => i ? q : { ...q, options: q.options.map((option, j) => j ? option : { ...option, id: '' }) }),
+      questions.map((q, i) => i ? q : { ...q, options: q.options.map((option, j) => j ? option : { ...option, text: '  ' }) }),
+    ];
+    invalidQuizzes.forEach((quiz) => expect(() => createQuizState('lesson', quiz as never)).toThrow());
+    expect(() => createQuizState('lesson', questions.map((q, i) => i ? q : null) as never)).toThrow(/object/i);
+    expect(() => createQuizState('lesson', questions.map((q, i) => i ? q : { ...q, id: questions[1].id }))).toThrow(/duplicate question id/i);
+  });
+
+  it('rejects a sparse question array', () => {
+    expect(() => createQuizState('lesson', Array(5) as never)).toThrow();
+  });
+
+  it('rejects a sparse options array', () => {
+    const sparseOptions = Array(4);
+    sparseOptions[0] = questions[0].options[0];
+    sparseOptions[1] = questions[0].options[1];
+    sparseOptions[2] = questions[0].options[2];
+    const malformed = questions.map((q, i) => i ? q : { ...q, options: sparseOptions });
+    expect(() => createQuizState('lesson', malformed as never)).toThrow();
+  });
+
+  it('keeps phase guards, returns immutable transitions, and only returns a completed 5-answer result', () => {
+    let state = createQuizState('lesson-1', questions);
+    expect(() => getQuizResult(state)).toThrow(/completed|five/i);
+    expect(confirmAnswer(state)).toBe(state);
+    expect(continueQuiz(state)).toBe(state);
+    expect(Object.isFrozen(state.answers)).toBe(true);
+    const firstFeedback = confirmAnswer(selectOption(state, 'a'));
+    expect(selectOption(firstFeedback, 'b')).toBe(firstFeedback);
+    expect(Object.isFrozen(firstFeedback.answers)).toBe(true);
+    for (let i = 0; i < 5; i += 1) {
+      const selected = selectOption(state, i === 0 ? 'a' : 'b');
+      expect(selected).not.toBe(state);
+      const feedback = confirmAnswer(selected);
+      expect(confirmAnswer(feedback)).toBe(feedback);
+      state = continueQuiz(feedback);
+    }
+    expect(state.phase).toBe('completed');
+    expect(() => getQuizResult({ ...state, answers: state.answers.slice(0, 4) })).toThrow(/five/i);
+    expect(getQuizResult(state)).toEqual({
+      lessonId: 'lesson-1', totalQuestions: 5, correctAnswers: 1, score: 1, passed: false,
+      answers: expect.arrayContaining([expect.objectContaining({ isCorrect: true })]),
+    });
+    expect(continueQuiz(state)).toBe(state);
+    const passedState = createQuizState('lesson-2', questions);
+    let passed = passedState;
+    for (let i = 0; i < 5; i += 1) passed = continueQuiz(confirmAnswer(selectOption(passed, i < 4 ? 'a' : 'b')));
+    expect(getQuizResult(passed).passed).toBe(true);
+    expect(getQuizResult(passed).score).toBe(4);
+  });
+
+  it.each([
+    [0, false], [3, false], [4, true], [5, true],
+  ])('reports passed=%s for a completed attempt with that many correct answers', (correctCount, passed) => {
+    let state = createQuizState('lesson-threshold', questions);
+    for (let i = 0; i < 5; i += 1) {
+      state = continueQuiz(confirmAnswer(selectOption(state, i < correctCount ? 'a' : 'b')));
+    }
+    expect(getQuizResult(state).correctAnswers).toBe(correctCount);
+    expect(getQuizResult(state).passed).toBe(passed);
+  });
+
+  it('returns correct answers out of five and rejects all invalid counts', () => {
+    expect([0, 3, 4, 5].map((count) => calculateScore(count, 5))).toEqual([0, 3, 4, 5]);
+    for (const [correct, total] of [[-1, 5], [6, 5], [1.5, 5], [1, 4], [1, 6], [0, 0], [NaN, 5], [1, Infinity]]) {
       expect(() => calculateScore(correct, total)).toThrow(RangeError);
     }
   });
+});
 
-  it('accepts every valid count pair from zero through thirty', () => {
-    for (let total = 0; total <= 30; total += 1) {
-      for (let correct = 0; correct <= total; correct += 1) {
-        const score = calculateScore(correct, total);
-        expect(Number.isInteger(score)).toBe(true);
-        expect(score).toBeGreaterThanOrEqual(0);
-        expect(score).toBeLessThanOrEqual(100);
-      }
+describe('glossary service', () => {
+  const entries = [
+    { id: 'h', subject: 'historia', title: 'Imperio', date: 'Roma antigua' },
+    { id: 'b', subject: 'biologia', title: 'Célula', concept: 'Membrana celular' },
+    { id: 'q', subject: 'quimica', title: 'Agua', symbol: 'H₂O', atomicNumber: 8 },
+    { id: 'i', subject: 'ingles', title: 'Hello', vocabulary: 'greeting', audioUrl: 'hello.mp3' },
+    { id: 'c', subject: 'calculo', title: 'Derivada', example: 'Pendiente de la curva' },
+    { id: 'f', subject: 'fisica', title: 'Fuerza', properties: ['masa', 'aceleración'] },
+  ] as const;
+
+  it('supports six subjects, optional heterogeneous text fields, and case-insensitive search', () => {
+    expect(getGlossaryEntries(entries)).toHaveLength(6);
+    for (const subject of ['historia', 'biologia', 'quimica', 'ingles', 'calculo', 'fisica'] as const) {
+      expect(getGlossaryEntries(entries, subject)).toHaveLength(1);
     }
-  });
-});
-
-describe('quiz fixtures end-to-end', () => {
-  const cases: [string, readonly Question[]][] = [
-    ['empty', quizFixtures.empty],
-    ['single', quizFixtures.single],
-    ['multiple', quizFixtures.multiple],
-    ['long', quizFixtures.long],
-  ];
-
-  it.each(cases)('%s reaches 100% with correct answers', (_name, quiz) => {
-    let state = createQuizState(quiz);
-    quiz.forEach((question, index) => {
-      const selection = quiz === quizFixtures.multiple
-        ? quizAnswerFixtures.correctOptionIds[index]
-        : question.correctOptionId;
-      state = selectOption(state, selection);
-      expect(state.index).toBeLessThan(quiz.length);
-      expect(getQuizResult(state).correctAnswers).toBe(index);
-      state = confirmAnswer(state);
-      expect(state.phase).toBe('feedback');
-      state = continueQuiz(state);
-      expect(state.index).toBeLessThanOrEqual(quiz.length);
-    });
-    expect(state.phase).toBe('completed');
-    expect(getQuizResult(state).score).toBe(quiz.length ? 100 : 0);
-  });
-
-  it.each(cases)('%s reaches 0% with incorrect answers (or empty)', (_name, quiz) => {
-    let state = createQuizState(quiz);
-    quiz.forEach((question, index) => {
-      const selection = quiz === quizFixtures.multiple
-        ? quizAnswerFixtures.incorrectOptionIds[index]
-        : question.options.find((option) => option.id !== question.correctOptionId)!.id;
-      state = selectOption(state, selection);
-      expect(state.index).toBeLessThan(quiz.length);
-      state = confirmAnswer(state);
-      expect(getQuizResult(state).answers).toHaveLength(index + 1);
-      state = continueQuiz(state);
-      expect(state.index).toBeLessThanOrEqual(quiz.length);
-    });
-    expect(state.phase).toBe('completed');
-    expect(getQuizResult(state).score).toBe(0);
-  });
-
-  it('uses explicit correct and incorrect answer fixtures for every example question', () => {
-    expect(quizAnswerFixtures.correctOptionIds).toEqual(exampleQuestions.map((question) => question.correctOptionId));
-    expect(quizAnswerFixtures.incorrectOptionIds).toHaveLength(exampleQuestions.length);
-    expect(quizAnswerFixtures.incorrectOptionIds.every((id, index) =>
-      id !== exampleQuestions[index].correctOptionId,
-    )).toBe(true);
-  });
-});
-
-describe('quiz state transitions', () => {
-  it('snapshots inputs and produces a partial result once per confirmed question', () => {
-    const input = questions.map((question) => ({
-      ...question,
-      options: question.options.map((option) => ({ ...option })),
-    }));
-    let state = createQuizState(input);
-    input[0].options[0].text = 'mutated';
-    input[0].text = 'also mutated';
-    expect(state.questions[0].options[0].text).toBe('Correct');
-    expect(state.questions[0].text).toBe(questions[0].text);
-
-    state = selectOption(state, 'a');
-    const feedback = confirmAnswer(state);
-    expect(feedback).not.toBe(state);
-    expect(confirmAnswer(feedback)).toBe(feedback);
-    expect(selectOption(feedback, 'b')).toBe(feedback);
-
-    const second = continueQuiz(feedback);
-    expect(second).not.toBe(feedback);
-    const secondFeedback = confirmAnswer(selectOption(second, 'a'));
-    const completed = continueQuiz(secondFeedback);
-    expect(completed.phase).toBe('completed');
-    expect(continueQuiz(completed)).toBe(completed);
-    expect(getQuizResult(completed)).toEqual({
-      totalQuestions: 2,
-      correctAnswers: 1,
-      score: 50,
-      answers: [
-        { questionId: 'q1', optionId: 'a', isCorrect: true },
-        { questionId: 'q2', optionId: 'a', isCorrect: false },
-      ],
-    });
-    expect(getQuizResult(completed).score).toBe(50);
-  });
-
-  it('leaves state unchanged for invalid or repeated transitions', () => {
-    const initial = createQuizState(questions);
-    expect(confirmAnswer(initial)).toBe(initial);
-    expect(continueQuiz(initial)).toBe(initial);
-    expect(selectOption(initial, 'missing')).toBe(initial);
-    const completed = createQuizState([]);
-    expect(selectOption(completed, 'any')).toBe(completed);
-    expect(confirmAnswer(completed)).toBe(completed);
-
-    const selected = selectOption(initial, 'a');
-    expect(selectOption(selected, 'a')).toBe(selected);
-    const feedback = confirmAnswer(selected);
-    expect(confirmAnswer(feedback)).toBe(feedback);
-    expect(continueQuiz(feedback).index).toBe(1);
-  });
-
-  it('completes an empty quiz immediately with a zero result', () => {
-    const empty = createQuizState([]);
-    expect(empty.phase).toBe('completed');
-    expect(getQuizResult(empty)).toEqual({
-      totalQuestions: 0,
-      correctAnswers: 0,
-      score: 0,
-      answers: [],
-    });
-    expect(continueQuiz(empty)).toBe(empty);
-  });
-
-  it('rejects malformed question identifiers, text, options, and answer keys', () => {
-    const invalid: Question[][] = [
-      [{ ...questions[0], id: ' ' }],
-      [questions[0], { ...questions[1], id: 'q1' }],
-      [{ ...questions[0], text: '  ' }],
-      [{ ...questions[0], options: [{ id: 'a', text: 'A' }] }],
-      [{ ...questions[0], correctOptionId: 'missing' }],
-      [{ ...questions[0], options: [{ id: ' ', text: 'A' }, questions[0].options[1]] }],
-      [{ ...questions[0], options: [questions[0].options[0], { ...questions[0].options[1], id: 'a' }] }],
-      [{ ...questions[0], options: [{ id: 'a', text: ' ' }, questions[0].options[1]] }],
-      [{ ...questions[0], explanation: ' ' }],
-    ];
-
-    for (const quiz of invalid) expect(() => createQuizState(quiz)).toThrow(/question|option/i);
+    expect(filterGlossaryEntries(entries, 'CELULAR')[0].id).toBe('b');
+    expect(filterGlossaryEntries(entries, 'aceleración')[0].id).toBe('f');
+    expect(filterGlossaryEntries(entries, 'hello.mp3')[0].id).toBe('i');
+    expect(filterGlossaryEntries(entries, '  ', 'quimica')).toEqual([entries[2]]);
+    expect(filterGlossaryEntries(entries, 'no existe')).toEqual([]);
   });
 });

@@ -1,4 +1,35 @@
-# Virtu Core — tareas y aceptación
+# Virtu Core 2 — tareas y aceptación vigentes
+
+Fuente vigente: árbol compartido por el usuario y lectura autenticada de las 28 tarjetas del tablero https://trello.com/b/rAeH5rhS/calculo-virtu. Las siete siguientes dicen «Responsable propuesto: matias Moron», sin miembros asignados, en lista `to Do`, `complete: false` al consultarlas. No se modifica Trello ni se afirma aprobación de PR. Usuario aprobó implementar estas siete y sus dependencias mínimas.
+
+Rutas relativas a `mobile/src/shared/features/`:
+
+| Tarjeta | Entregable verificable | Dependencias Trello | Estado de esta ejecución |
+|---|---|---|---|
+| [C2-01](https://trello.com/c/71nB1Lh5) | Contratos TS de intento por lección, 5 preguntas de 4 opciones; tipos en `quiz/screens/QuizScreen.tsx` | Acuerdo Core 1/Backend | Verificada localmente; acuerdo externo y PR pendientes |
+| [C2-05](https://trello.com/c/TFuhybMe) | `quiz/screens/QuizScreen.tsx` recibe datos por props; inválidos sin caída ni completado | C2-01/02/03 | Verificada localmente; aceptación del equipo y PR pendientes |
+| [C2-10](https://trello.com/c/DmR0bhdF) | `quiz/components/FeedbackModal.tsx`, corrección/solución y continuación sin cálculo de nota | C2-01/02 | Verificada localmente; QA dispositivo y PR pendientes |
+| [C2-15](https://trello.com/c/txoixMb6) | Confirmación irreversible, feedback inmediato, no revelación previa | C2-10/12/13 | Verificada localmente; aceptación del equipo y PR pendientes |
+| [C2-20](https://trello.com/c/QuvXXLVG) | Pruebas 0/5, 3/5, 4/5 y 5/5; aprobado solo >=4; duplicados sin efecto | C2-12/13 | Verificada localmente; revisión de PR pendiente |
+| [C2-21](https://trello.com/c/ST0UMVPK) | Fixture válido 5×4; 0/1 preguntas se rechazan; textos extensos | C2-01/05 | Verificada localmente; revisión de contenido/PR pendiente |
+| [C2-25](https://trello.com/c/jIilr05m) | Contratos internos de QuizScreen y GlossaryScreen, prueba local; publicación Sprint 2 pendiente | C2-05/16/23/24 | Contratos/ejemplo verificados localmente; revisión y publicación formal pendientes |
+
+Se implementan dependencias locales necesarias sin atribuir su autoría ni aprobación a otros miembros: QuestionCard, resultado/revisión, selección/bloqueo/cálculo y contrato mínimo heterogéneo del glosario. No se afirma que ello cierre las tarjetas propuestas para Oliver, Jhaelin o Esteban.
+
+## Pendientes que el código no puede cerrar
+
+- Acordar contratos con Core 1/Backend y validar reparto del trabajo con los demás integrantes.
+- Revisión de PR y QA Android desde 360 dp, textos 16 sp, contraste y VoiceOver/TalkBack/teclado. Pruebas Node/export no son QA de dispositivo.
+- Timer: regla temporal pendiente; no registrar duración de intento según C2-13/20.
+- Sprint 2: implementar API de notas/intentos en `quizService.js`; publicación/documentación definitiva de ambos motores para las seis materias (C2-02/25).
+- Sprint 3 y cumplimiento completo del ERS v1.0: no verificables sin documentación adicional.
+- No declarar Done por resultados históricos. Evidencia nueva en [plan.md](plan.md).
+
+---
+
+## Registro histórico sustituido
+
+Las marcas y estados siguientes describen entregas bajo criterios anteriores; no acreditan las tarjetas vigentes (5×4, aprobación 4/5 y árbol original).
 
 Referencias: [spec](spec.md), [diseño](design.md), [plan](plan.md). Archivos de implementación relativos a `mobile/src/core/quiz/`, salvo ruta completa.
 

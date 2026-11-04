@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { FeedbackModal } from '@/core/quiz/FeedbackModal';
+import { FeedbackModal } from '@/shared/features/quiz/components/FeedbackModal';
 import { describe, expect, it, jest } from '@jest/globals';
 
 describe('FeedbackModal', () => {
