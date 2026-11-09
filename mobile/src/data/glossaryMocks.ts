@@ -39,6 +39,15 @@ export const glossaryMocks: GlossaryItem[] = [
     example: 'The company is known for its innovation in technology.',
   },
   {
+    // NUEVO EJEMPLO: Término de inglés sin audio (para probar campo opcional)
+    id: 'ing-002',
+    subject: 'ingles',
+    term: 'Cloud',
+    definition: 'A visible mass of condensed water vapor.',
+    vocabulary: 'Noun',
+    example: 'The sky is full of clouds today.',
+  },
+  {
     id: 'bio-001',
     subject: 'biologia',
     term: 'Mitocondria',
