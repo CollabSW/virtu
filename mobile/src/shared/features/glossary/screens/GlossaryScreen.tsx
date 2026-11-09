@@ -1,3 +1,4 @@
+// src/shared/features/glossary/screens/GlossaryScreen.tsx
 import React, { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,10 +9,22 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { GlossaryItem } from '@/types/glossary';
 import { glossaryMocks } from '@/data/glossaryMocks'; 
+// Importamos el nuevo componente
+import { SearchBar } from '@/shared/components/SearchBar'; 
 
 export default function GlossaryScreen() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState(''); // Estado para la búsqueda
   const theme = useTheme(); 
+
+  // Filtramos los elementos basándonos en la búsqueda (término o definición)
+  const filteredData = glossaryMocks.filter((item) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      item.term.toLowerCase().includes(query) ||
+      item.definition.toLowerCase().includes(query)
+    );
+  });
 
   const renderItemDetails = (item: GlossaryItem) => {
     return (
@@ -89,15 +102,22 @@ export default function GlossaryScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ThemedText type="title" style={styles.title}>Glosario</ThemedText>
         
+        {/* Integración de la barra de búsqueda */}
+        <SearchBar 
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Buscar término o definición..."
+        />
+
         <FlatList
-          data={glossaryMocks}
+          data={filteredData} // Usamos los datos filtrados
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <ThemedText style={{ textAlign: 'center', marginTop: Spacing.four }}>
-              No hay términos disponibles.
+            <ThemedText style={{ textAlign: 'center', marginTop: Spacing.four }} themeColor="textSecondary">
+              No se encontraron términos que coincidan con "{searchQuery}".
             </ThemedText>
           }
         />
