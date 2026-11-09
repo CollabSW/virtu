@@ -16,42 +16,23 @@ export default function GlossaryScreen() {
   const [searchQuery, setSearchQuery] = useState(''); 
   const theme = useTheme(); 
 
-  // Función que extrae todo el texto buscable según la materia (C2-18)
   const getSearchableText = (item: GlossaryItem): string => {
     let text = `${item.term} ${item.definition}`;
-
     switch (item.subject) {
-      case 'calculo':
-        text += ` ${item.theme} ${item.title} ${item.renderType}`;
-        break;
-      case 'historia':
-        text += ` ${item.fact} ${item.date} ${item.character} ${item.timeline.join(' ')}`;
-        break;
-      case 'fisica':
-        text += ` ${item.concept} ${item.videoUrl || ''}`;
-        break;
-      case 'ingles':
-        // Usamos || '' para evitar fallos si audioUrl es undefined (campo opcional)
-        text += ` ${item.vocabulary} ${item.example} ${item.audioUrl || ''}`; 
-        break;
-      case 'biologia':
-        text += ` ${item.flashcard.front} ${item.flashcard.back}`;
-        break;
-      case 'quimica':
-        text += ` ${item.elementProperties.symbol} ${item.elementProperties.category} ${item.elementProperties.atomicNumber}`;
-        break;
+      case 'calculo': text += ` ${item.theme} ${item.title} ${item.renderType}`; break;
+      case 'historia': text += ` ${item.fact} ${item.date} ${item.character} ${item.timeline.join(' ')}`; break;
+      case 'fisica': text += ` ${item.concept} ${item.videoUrl || ''}`; break;
+      case 'ingles': text += ` ${item.vocabulary} ${item.example} ${item.audioUrl || ''}`; break;
+      case 'biologia': text += ` ${item.flashcard.front} ${item.flashcard.back}`; break;
+      case 'quimica': text += ` ${item.elementProperties.symbol} ${item.elementProperties.category} ${item.elementProperties.atomicNumber}`; break;
     }
-    
     return text.toLowerCase();
   };
 
-  // Filtrado usando la nueva función
   const filteredData = glossaryMocks.filter((item) => {
     const query = searchQuery.toLowerCase();
-    if (!query) return true; // Consulta vacía muestra todo
-
-    const searchableText = getSearchableText(item);
-    return searchableText.includes(query);
+    if (!query) return true; 
+    return getSearchableText(item).includes(query);
   });
 
   const renderItemDetails = (item: GlossaryItem) => {
@@ -118,7 +99,6 @@ export default function GlossaryScreen() {
           <ThemedText type="small" themeColor="textSecondary">
             {item.definition}
           </ThemedText>
-          
           {isExpanded && renderItemDetails(item)}
         </ThemedView>
       </Pressable>
@@ -142,10 +122,24 @@ export default function GlossaryScreen() {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          // AQUÍ EMPIEZA LA MEJORA DE LA HU C2-19
           ListEmptyComponent={
-            <ThemedText style={{ textAlign: 'center', marginTop: Spacing.four }} themeColor="textSecondary">
-              No se encontraron términos que coincidan con "{searchQuery}".
-            </ThemedText>
+            <View style={styles.emptyContainer}>
+              <ThemedText style={styles.emptyIcon}>🔍</ThemedText>
+              <ThemedText type="subtitle" style={styles.emptyTitle}>
+                Sin resultados
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
+                No encontramos ningún término que coincida con "{searchQuery}". Intenta con otra palabra.
+              </ThemedText>
+              
+              <Pressable 
+                onPress={() => setSearchQuery('')}
+                style={[styles.clearButton, { backgroundColor: theme.backgroundSelected }]}
+              >
+                <ThemedText type="smallBold">Limpiar búsqueda</ThemedText>
+              </Pressable>
+            </View>
           }
         />
       </SafeAreaView>
@@ -157,9 +151,37 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1, paddingHorizontal: Spacing.four },
   title: { marginVertical: Spacing.four, textAlign: 'center', fontSize: 32 },
-  listContent: { gap: Spacing.three, paddingBottom: Spacing.six },
+  listContent: { gap: Spacing.three, paddingBottom: Spacing.six, flexGrow: 1 }, // flexGrow ayuda a centrar el EmptyComponent
   card: { padding: Spacing.three, borderRadius: Spacing.two, gap: Spacing.two },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   subjectBadge: { paddingHorizontal: Spacing.two, paddingVertical: Spacing.half, borderRadius: Spacing.one },
   detailsContainer: { marginTop: Spacing.two, paddingTop: Spacing.two, borderTopWidth: 1, gap: Spacing.one },
+  
+  // Estilos para el Estado Vacío (HU C2-19)
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.four,
+    marginTop: Spacing.six,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: Spacing.three,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    marginBottom: Spacing.two,
+    textAlign: 'center',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginBottom: Spacing.four,
+    lineHeight: 22,
+  },
+  clearButton: {
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.two,
+  }
 });
