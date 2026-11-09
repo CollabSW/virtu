@@ -10,6 +10,8 @@ import { useTheme } from '@/hooks/use-theme';
 import { GlossaryItem } from '@/types/glossary';
 import { glossaryMocks } from '@/data/glossaryMocks'; 
 import { SearchBar } from '@/shared/components/SearchBar'; 
+// Importamos el nuevo componente
+import { GlossaryItemDetail } from '@/shared/features/glossary/components/GlossaryItemDetail';
 
 export default function GlossaryScreen() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -35,53 +37,6 @@ export default function GlossaryScreen() {
     return getSearchableText(item).includes(query);
   });
 
-  const renderItemDetails = (item: GlossaryItem) => {
-    return (
-      <View style={[styles.detailsContainer, { borderTopColor: theme.backgroundSelected }]}>
-        {item.subject === 'calculo' && (
-          <>
-            <ThemedText type="small">Temática: {item.theme}</ThemedText>
-            <ThemedText type="small">Título: {item.title}</ThemedText>
-            <ThemedText type="code">Render: {item.renderType}</ThemedText>
-          </>
-        )}
-        {item.subject === 'historia' && (
-          <>
-            <ThemedText type="small">Personaje: {item.character}</ThemedText>
-            <ThemedText type="small">Fecha: {item.date}</ThemedText>
-            <ThemedText type="small">Línea temporal: {item.timeline.join(' → ')}</ThemedText>
-          </>
-        )}
-        {item.subject === 'fisica' && (
-          <>
-            <ThemedText type="small">Concepto: {item.concept}</ThemedText>
-            <ThemedText type="linkPrimary">Ver Video: {item.videoUrl}</ThemedText>
-          </>
-        )}
-        {item.subject === 'ingles' && (
-          <>
-            <ThemedText type="smallBold">Vocabulario: {item.vocabulary}</ThemedText>
-            <ThemedText type="small">Ejemplo: "{item.example}"</ThemedText>
-            {item.audioUrl && <ThemedText type="small">🔊 Audio disponible</ThemedText>}
-          </>
-        )}
-        {item.subject === 'biologia' && (
-          <>
-            <ThemedText type="smallBold">Flashcard (Frente): {item.flashcard.front}</ThemedText>
-            <ThemedText type="small">Respuesta: {item.flashcard.back}</ThemedText>
-          </>
-        )}
-        {item.subject === 'quimica' && (
-          <>
-            <ThemedText type="small">Símbolo: {item.elementProperties.symbol}</ThemedText>
-            <ThemedText type="small">Número Atómico: {item.elementProperties.atomicNumber}</ThemedText>
-            <ThemedText type="small">Categoría: {item.elementProperties.category}</ThemedText>
-          </>
-        )}
-      </View>
-    );
-  };
-
   const renderItem = ({ item }: { item: GlossaryItem }) => {
     const isExpanded = expandedId === item.id;
 
@@ -96,10 +51,18 @@ export default function GlossaryScreen() {
               </ThemedText>
             </View>
           </View>
+          
           <ThemedText type="small" themeColor="textSecondary">
             {item.definition}
           </ThemedText>
-          {isExpanded && renderItemDetails(item)}
+
+          {/* Indicador visual para el usuario (HU C2-24) */}
+          <ThemedText type="linkPrimary" style={styles.toggleText}>
+            {isExpanded ? 'Ocultar detalles' : 'Ver definición completa'}
+          </ThemedText>
+          
+          {/* Renderizamos el componente modularizado */}
+          {isExpanded && <GlossaryItemDetail item={item} />}
         </ThemedView>
       </Pressable>
     );
@@ -122,17 +85,13 @@ export default function GlossaryScreen() {
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          // AQUÍ EMPIEZA LA MEJORA DE LA HU C2-19
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <ThemedText style={styles.emptyIcon}>🔍</ThemedText>
-              <ThemedText type="subtitle" style={styles.emptyTitle}>
-                Sin resultados
-              </ThemedText>
+              <ThemedText type="subtitle" style={styles.emptyTitle}>Sin resultados</ThemedText>
               <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>
                 No encontramos ningún término que coincida con "{searchQuery}". Intenta con otra palabra.
               </ThemedText>
-              
               <Pressable 
                 onPress={() => setSearchQuery('')}
                 style={[styles.clearButton, { backgroundColor: theme.backgroundSelected }]}
@@ -151,37 +110,17 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   safeArea: { flex: 1, paddingHorizontal: Spacing.four },
   title: { marginVertical: Spacing.four, textAlign: 'center', fontSize: 32 },
-  listContent: { gap: Spacing.three, paddingBottom: Spacing.six, flexGrow: 1 }, // flexGrow ayuda a centrar el EmptyComponent
+  listContent: { gap: Spacing.three, paddingBottom: Spacing.six, flexGrow: 1 },
   card: { padding: Spacing.three, borderRadius: Spacing.two, gap: Spacing.two },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   subjectBadge: { paddingHorizontal: Spacing.two, paddingVertical: Spacing.half, borderRadius: Spacing.one },
-  detailsContainer: { marginTop: Spacing.two, paddingTop: Spacing.two, borderTopWidth: 1, gap: Spacing.one },
+  toggleText: { marginTop: Spacing.one, fontSize: 13 },
   
-  // Estilos para el Estado Vacío (HU C2-19)
   emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
-    marginTop: Spacing.six,
+    flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.four, marginTop: Spacing.six,
   },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: Spacing.three,
-  },
-  emptyTitle: {
-    fontSize: 24,
-    marginBottom: Spacing.two,
-    textAlign: 'center',
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginBottom: Spacing.four,
-    lineHeight: 22,
-  },
-  clearButton: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
-  }
+  emptyIcon: { fontSize: 64, marginBottom: Spacing.three },
+  emptyTitle: { fontSize: 24, marginBottom: Spacing.two, textAlign: 'center' },
+  emptyText: { textAlign: 'center', marginBottom: Spacing.four, lineHeight: 22 },
+  clearButton: { paddingHorizontal: Spacing.four, paddingVertical: Spacing.two, borderRadius: Spacing.two }
 });
