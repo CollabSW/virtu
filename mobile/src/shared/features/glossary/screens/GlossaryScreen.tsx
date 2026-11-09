@@ -9,21 +9,49 @@ import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { GlossaryItem } from '@/types/glossary';
 import { glossaryMocks } from '@/data/glossaryMocks'; 
-// Importamos el nuevo componente
 import { SearchBar } from '@/shared/components/SearchBar'; 
 
 export default function GlossaryScreen() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState(''); // Estado para la búsqueda
+  const [searchQuery, setSearchQuery] = useState(''); 
   const theme = useTheme(); 
 
-  // Filtramos los elementos basándonos en la búsqueda (término o definición)
+  // Función que extrae todo el texto buscable según la materia (C2-18)
+  const getSearchableText = (item: GlossaryItem): string => {
+    let text = `${item.term} ${item.definition}`;
+
+    switch (item.subject) {
+      case 'calculo':
+        text += ` ${item.theme} ${item.title} ${item.renderType}`;
+        break;
+      case 'historia':
+        text += ` ${item.fact} ${item.date} ${item.character} ${item.timeline.join(' ')}`;
+        break;
+      case 'fisica':
+        text += ` ${item.concept} ${item.videoUrl || ''}`;
+        break;
+      case 'ingles':
+        // Usamos || '' para evitar fallos si audioUrl es undefined (campo opcional)
+        text += ` ${item.vocabulary} ${item.example} ${item.audioUrl || ''}`; 
+        break;
+      case 'biologia':
+        text += ` ${item.flashcard.front} ${item.flashcard.back}`;
+        break;
+      case 'quimica':
+        text += ` ${item.elementProperties.symbol} ${item.elementProperties.category} ${item.elementProperties.atomicNumber}`;
+        break;
+    }
+    
+    return text.toLowerCase();
+  };
+
+  // Filtrado usando la nueva función
   const filteredData = glossaryMocks.filter((item) => {
     const query = searchQuery.toLowerCase();
-    return (
-      item.term.toLowerCase().includes(query) ||
-      item.definition.toLowerCase().includes(query)
-    );
+    if (!query) return true; // Consulta vacía muestra todo
+
+    const searchableText = getSearchableText(item);
+    return searchableText.includes(query);
   });
 
   const renderItemDetails = (item: GlossaryItem) => {
@@ -102,15 +130,14 @@ export default function GlossaryScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ThemedText type="title" style={styles.title}>Glosario</ThemedText>
         
-        {/* Integración de la barra de búsqueda */}
         <SearchBar 
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholder="Buscar término o definición..."
+          placeholder="Buscar por cualquier campo..."
         />
 
         <FlatList
-          data={filteredData} // Usamos los datos filtrados
+          data={filteredData} 
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
