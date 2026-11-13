@@ -3,6 +3,8 @@ Desarrollo de herramienta digital educativa
 
 Guía principal del proyecto: qué es Virtu, cómo levantarlo y cómo trabajamos entre equipos. Si nunca usaste React Native, sigue la [sección 5](#5-cómo-levantar-el-proyecto-paso-a-paso) paso a paso.
 
+> La guía general describe la base de Core 1 que viene de `develop`. Para trabajar con el cuestionario y el glosario en `core2`, ejecuta los comandos desde `mobile/` y sigue la [guía de Core 2](#core-compartido-en-core2).
+
 ## Índice
 
 1. [Sobre Virtu](#1-sobre-virtu)
@@ -18,6 +20,7 @@ Guía principal del proyecto: qué es Virtu, cómo levantarlo y cómo trabajamos
 11. [Organización Scrum](#11-organización-scrum)
 12. [Documentación del proyecto](#12-documentación-del-proyecto)
 13. [Contacto](#13-contacto)
+14. [Core compartido en `core2`](#core-compartido-en-core2)
 
 ## 1. Sobre Virtu
 
@@ -307,10 +310,10 @@ Plantilla de descripción:
 C1-05
 
 ## Qué se hizo
-- 
+-
 
 ## Cómo probarlo
-1. 
+1.
 
 ## Checklist
 - [ ] `npm run lint` pasa sin errores
@@ -387,9 +390,16 @@ Grupo 6 Física https://drive.google.com/drive/folders/1HDZTP-W8im9TS2LRsrX-qBFi
 
 Grupo 7 Inglés https://drive.google.com/drive/folders/18uVg8856dVuTEpPCzpLrkRJEoTmU3wwe?usp=sharing
 
-
 ## 13. Contacto
 
 - Dudas sobre la estructura, el login o el repositorio: Rubén (lead de Core 1).
 - Dudas sobre cuestionarios y glosario: Matías (lead de Core 2).
 - Dudas de cada módulo: el lead de su equipo.
+
+## Core compartido en `core2`
+
+Las herramientas reutilizables siguen el árbol de la magíster en `mobile/src/shared/features/`: cuestionarios en `quiz/` y glosario en `glossary/`. El alcance actual es Sprint 1 de las siete tarjetas propuestas para Matías y sus dependencias necesarias; no equivale a completar todos los equipos.
+
+El tema global vive en `mobile/src/config/theme.js`, la navegación implementada en `mobile/src/navigation/AppNavigator.tsx` y los controles comunes en `mobile/src/shared/components/`. El controlador local pertenece a `QuizScreen.tsx`; el servicio de envío de notas/registro de intentos está pendiente de API, no se reemplaza por una máquina de estados. Los adaptadores del starter aún presentes no acreditan las piezas faltantes de Core 1, Backend ni materias.
+
+Guía SDD: [spec](mobile/docs/specs/core/spec.md), [design](mobile/docs/specs/core/design.md), [tasks](mobile/docs/specs/core/tasks.md), [plan y evidencia](mobile/docs/specs/core/plan.md). [Contratos internos y ejemplo](mobile/docs/quiz-engine.md). Las secciones históricas registran una arquitectura anterior, no instrucciones vigentes.
