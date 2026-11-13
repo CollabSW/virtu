@@ -10,7 +10,7 @@ import type { GlossaryEntry, GlossarySubject } from '../glossaryService';
 
 type Props = { entries: readonly GlossaryEntry[]; subject?: GlossarySubject; title?: string };
 const fieldLabels: Record<string, string> = {
-  definition: 'Definición', topic: 'Tema', rendering: 'Representación', date: 'Fecha',
+  definition: 'Definición', topic: 'Tema', rendering: 'Representación', fact: 'Dato', date: 'Fecha',
   character: 'Personaje', timeline: 'Línea de tiempo', concept: 'Concepto', videoUrl: 'Video',
   vocabulary: 'Vocabulario', audioUrl: 'Audio', example: 'Ejemplo', front: 'Anverso',
   back: 'Reverso', symbol: 'Símbolo', atomicNumber: 'Número atómico', properties: 'Propiedades',

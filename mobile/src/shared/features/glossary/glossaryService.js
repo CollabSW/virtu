@@ -1,7 +1,7 @@
 // @ts-check
 
 /** @typedef {'historia' | 'biologia' | 'quimica' | 'ingles' | 'calculo' | 'fisica'} GlossarySubject */
-/** @typedef {{ readonly id: string, readonly subject: GlossarySubject, readonly title: string, readonly definition?: string, readonly topic?: string, readonly rendering?: string, readonly date?: string, readonly character?: string, readonly timeline?: string, readonly concept?: string, readonly videoUrl?: string, readonly vocabulary?: string, readonly audioUrl?: string, readonly example?: string, readonly front?: string, readonly back?: string, readonly symbol?: string, readonly atomicNumber?: number, readonly properties?: string | readonly string[] }} GlossaryEntry */
+/** @typedef {{ readonly id: string, readonly subject: GlossarySubject, readonly title: string, readonly definition?: string, readonly topic?: string, readonly rendering?: string, readonly fact?: string, readonly date?: string, readonly character?: string, readonly timeline?: string, readonly concept?: string, readonly videoUrl?: string, readonly vocabulary?: string, readonly audioUrl?: string, readonly example?: string, readonly front?: string, readonly back?: string, readonly symbol?: string, readonly atomicNumber?: number, readonly properties?: string | readonly string[] }} GlossaryEntry */
 
 const subjects = new Set(['historia', 'biologia', 'quimica', 'ingles', 'calculo', 'fisica']);
 
