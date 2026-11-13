@@ -2,6 +2,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useTheme } from '@/hooks/use-theme';
 import { FeedbackModal } from '../components/FeedbackModal';
 import { QuestionCard } from '../components/QuestionCard';
 import { ResultScreen } from './ResultScreen';
@@ -120,6 +121,7 @@ type Props = {
 };
 
 export function QuizScreen({ lessonId, questions, title = 'Repaso', onAnswer, onComplete }: Props) {
+  const theme = useTheme();
   const [initial] = useState(() => {
     try {
       return { state: createQuizState(lessonId, questions), error: null };
@@ -191,10 +193,10 @@ export function QuizScreen({ lessonId, questions, title = 'Repaso', onAnswer, on
   const answer = state.answers[state.answers.length - 1];
   return (
     <ThemedView style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <ThemedText type="smallBold" style={styles.eyebrow}>APRENDE A TU RITMO</ThemedText>
+      <ScrollView key={question.id} contentContainerStyle={styles.content}>
+        <ThemedText type="smallBold" style={[styles.eyebrow, { color: theme.success }]}>APRENDE A TU RITMO</ThemedText>
         <ThemedText type="subtitle">{title}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
+        <ThemedText themeColor="textSecondary">
           Pregunta {state.index + 1} de 5
         </ThemedText>
         <View
@@ -206,7 +208,6 @@ export function QuizScreen({ lessonId, questions, title = 'Repaso', onAnswer, on
         </View>
         {question && (
           <QuestionCard
-            key={question.id}
             question={question}
             selectedOptionId={state.selectedOptionId}
             disabled={state.phase !== 'answering'}
@@ -219,6 +220,7 @@ export function QuizScreen({ lessonId, questions, title = 'Repaso', onAnswer, on
         visible={state.phase === 'feedback'}
         isCorrect={answer?.isCorrect ?? false}
         explanation={question?.explanation ?? ''}
+        correctOptionText={question.options.find((option) => option.id === question.correctOptionId)?.text}
         onContinue={advance}
       />
     </ThemedView>
@@ -235,7 +237,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     gap: 20,
   },
-  eyebrow: { letterSpacing: 1.5, color: '#39866b' },
+  eyebrow: { letterSpacing: 1.5 },
   track: { height: 6, borderRadius: 8, backgroundColor: '#d8ddd9', overflow: 'hidden' },
   progress: { height: '100%', backgroundColor: '#39866b', borderRadius: 8 },
   error: { flex: 1, padding: 24, gap: 12 },

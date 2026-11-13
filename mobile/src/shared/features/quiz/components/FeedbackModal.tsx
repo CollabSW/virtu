@@ -14,10 +14,16 @@ import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
 import { Button } from '@/shared/components/Button';
 
-type Props = { visible: boolean; isCorrect: boolean; explanation: string; onContinue: () => void };
+type Props = {
+  visible: boolean;
+  isCorrect: boolean;
+  explanation: string;
+  correctOptionText?: string;
+  onContinue: () => void;
+};
 type Session = { token: symbol | null; active: boolean; used: boolean };
 
-export function FeedbackModal({ visible, isCorrect, explanation, onContinue }: Props) {
+export function FeedbackModal({ visible, isCorrect, explanation, correctOptionText, onContinue }: Props) {
   const theme = useTheme();
   const heading = useRef<Text>(null);
   const priorVisibility = useRef(false);
@@ -50,9 +56,8 @@ export function FeedbackModal({ visible, isCorrect, explanation, onContinue }: P
     priorVisibility.current = visible;
   }, [visible]);
 
-  const headingColor = theme.background === '#000000'
-    ? (isCorrect ? '#78d8a5' : '#ff9086')
-    : (isCorrect ? '#176b48' : '#a52d25');
+  const errorColor = theme.background === '#000000' ? '#ff9086' : '#a52d25';
+  const headingColor = isCorrect ? theme.success : errorColor;
 
   return (
     <Modal
@@ -85,6 +90,9 @@ export function FeedbackModal({ visible, isCorrect, explanation, onContinue }: P
             {isCorrect ? '¡Respuesta correcta!' : 'Respuesta incorrecta'}
           </Text>
           <ScrollView style={styles.explanationScroll} contentContainerStyle={styles.explanation}>
+            {!isCorrect && correctOptionText && (
+              <ThemedText>{`Respuesta correcta: ${correctOptionText}`}</ThemedText>
+            )}
             <ThemedText>{explanation}</ThemedText>
           </ScrollView>
           <Button
@@ -118,7 +126,7 @@ const styles = StyleSheet.create({
     borderColor: '#888',
   },
   explanationScroll: { flexShrink: 1 },
-  explanation: { paddingVertical: 4 },
+  explanation: { paddingVertical: 4, gap: 8 },
   heading: { fontSize: 32, lineHeight: 44, fontWeight: '600' },
   button: { minHeight: 52 },
 });

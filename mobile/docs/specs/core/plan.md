@@ -1,4 +1,82 @@
-# Corrección de responsabilidades y ubicaciones — plan vigente
+# Evidencia de la revisión del 11 de noviembre de 2026
+
+- [Matriz de tarjetas](tasks.md). Se cotejaron las 26 tarjetas técnicas accesibles y las tres de coordinación. C2-03 y C2-17 ya no se pudieron abrir en Trello. Sus comportamientos siguen cubiertos localmente.
+- Android 15, emulador `Medium_Phone`, Expo Go 57.0.9. Se probó `/pruebas` con 1080 px a 480 dpi (360 dp), escala de fuente 1.0. La pregunta y las alternativas extensas se ajustaron al ancho y se recorrieron por desplazamiento vertical.
+- Se eligió una alternativa incorrecta en el caso largo. El modal mostró el texto de la correcta y permitió continuar. Antes del ajuste, la segunda pregunta abría desplazada hasta las opciones. Después del ajuste se comprobaron los encabezados de las preguntas 2 a 5 al avanzar y el resultado `0 de 5`, con revisión desplazable.
+- El texto de progreso, los identificadores de opción y las preguntas en resultados usan 16 sp. El contraste calculado del borde seleccionado frente a su fondo es 4,97:1 en claro y 7,57:1 en oscuro. Quedan pendientes TalkBack, dispositivo físico y revisión de PR.
+- `npm run lint` y `npm run typecheck` pasaron desde `mobile/`. Jest pasó 68 pruebas en nueve suites después de cerrar Metro y el emulador. La primera ejecución con el emulador arrancando agotó el tiempo de una prueba. Para la verificación final se usó `--runInBand --no-cache --cacheDirectory node_modules/.cache/virtu-jest --testTimeout 30000`, con ajustes limitados a esa ejecución.
+
+# Tablero completo Core 2 — planificación anterior
+
+**Objetivo:** revisar C2-01..28 y completar pendientes reales en el árbol aprobado del usuario. [Spec](spec.md), [diseño](design.md), [matriz completa de tareas](tasks.md). No reemplazar trabajo funcional ni crear funcionalidades solo para llenar nombres del árbol.
+
+## Diagnóstico nuevo
+
+- 28 tarjetas Sprint 1/Core 2 consultadas completamente en https://trello.com/b/rAeH5rhS/calculo-virtu, sin páginas pendientes. El resto del árbol representa otros ámbitos sin contratos/tarjetas aquí.
+- Base actual ya tiene QuizScreen, QuestionCard, feedback, resultados, glosario y 37 pruebas aprobadas en la ejecución inmediatamente anterior. Esos resultados no se reutilizarán como aprobación global de los cambios nuevos.
+- Defecto confirmado por cálculo: texto pequeño #39866b sobre blanco 4,38:1, menor que 4,5:1; sobre negro 4,80:1. Falta evidencia completa de campos/flujo del glosario y QA 360.
+- El servicio ya busca recursivamente strings/arrays; C2-18 exige campos **textuales**, no búsqueda numérica de atomicNumber ni objetos cíclicos fuera de contrato. No se implementan esos supuestos como defectos ficticios.
+- Entorno: Chrome/Brave instalados; SDK Android y AVD `Medium_Phone` disponibles, sin dispositivos conectados inicialmente. Comprobar lo que pueda ejecutarse realmente, sin equiparar export web a Android.
+- Preservar los nueve archivos locales modificados de la entrega anterior de Jhaelin. Timer/quizService vacíos son aportación del pull, sin duración/API especificada.
+
+## Lanes y validación
+
+- [ ] **Datos/glosario — fixer:** `tests/glossary/{fixtures.ts,glossaryService.test.ts}`. Reutilizar los seis datos del preview. Test por campo textual, optional, arrays, query vacía, empty entries y combinación subject/query. Servicio solo si falla un requisito real. Checks enfocados; no UI/docs.
+- [ ] **UI — designer:** componentes/pantallas existentes aprobados, `tests/quiz/QuestionCard.test.tsx`, `tests/glossary/GlossaryScreen.test.tsx`, preview consume fixture aislado. Corregir contraste y solo overflow comprobado; validar seis detalles/limpieza/estados. No servicio, hook o tests ajenos.
+- [ ] **Hidratación — fixer:** hook web existente y regresión aislada bajo `tests/hooks/`; conservar SSR claro y esquema cliente reactivo sin setState síncrono en effect ni desactivar lint. No cambios de navegación/tema.
+- [ ] **Orquestador:** documentación, lectura/reconciliación de artefactos, evidencia de layout/dispositivo, suite completa única final, typecheck, lint y export release sin datos ficticios. Repetir solo checks afectados si surge un fallo.
+
+Sin dependencias de producción nuevas, commits, push, despliegues ni modificaciones de Trello. Revisión de PR/acuerdos humanos pendientes aunque los checks técnicos aprueben. Timer/API formal/publicación de motores siguen las limitaciones explícitas de Sprint 2; no hay un ERS completo para certificarlo.
+
+## Evidencia global nueva
+
+Pendiente de terminar y reconciliar las tres lanes. No declarar C2-26 completa sin comprobación Android de 360 dp.
+
+---
+
+# Jhaelin — ejecución anterior sobre la base integrada
+
+**Objetivo:** completar y verificar C2-03/08/12/13/17/23/27, propuestas para `jhaelin.alvarado` en Sprint 1/Core 2. Fuentes: [spec](spec.md), [tareas](tasks.md) y consulta autenticada del tablero https://trello.com/b/rAeH5rhS/calculo-virtu y de cada tarjeta.
+
+**Arquitectura:** reutilizar contratos/lógica en `shared/features/quiz/screens/QuizScreen.tsx` y vistas existentes. Fixtures y pruebas únicamente en `tests/quiz/`. No nueva API, servicios, duración, archivos auxiliares de producción ni dependencias.
+
+## Plan y responsables
+
+- [x] Diagnóstico (orquestador/explorer): leer siete tarjetas completas y fuentes actuales. C2-03 está en `review`; C2-08/12/13/17/23/27 en `In progress`. Todas sin miembros formalmente asignados; responsabilidad propuesta en descripción. No comentarios/checklists adicionales.
+- [x] Baseline (orquestador): árbol limpio en `core2`, HEAD `7dc8e77`; suite completa: 26/26 en 5 suites. Typecheck falla por `jest.fn` sin import de valor en `QuizDemo.test.tsx:9`; lint global solo por el hook web preexistente.
+- [x] Corrección mínima (orquestador): importar `jest` desde `@jest/globals` en `QuizDemo.test.tsx`, sin cambiar su cobertura de glosario/controles.
+- [x] Fixtures y caracterización (fixer): objeto por lección 5×4, resultados 0..5 y aprobado explícito; suites existentes reforzadas sin mocks del motor ni cálculo duplicado. Dos suites enfocadas aprobadas.
+- [x] Reconciliación (orquestador): artefactos leídos; se eliminaron promesas de eventos sin await que causaban overlapping act, se tipó la tabla Jest y se reforzó selección UI A→B y repetición final de confirmación/continuación. No defectos de producción detectados ni RED conductual nuevo.
+- [x] Validación final (orquestador): typecheck, lint global/enfocado, suite completa y export web secuenciales; release sin fixtures. Resultados nuevos abajo.
+- [x] Entrega: tareas/guía actualizadas, base existente distinguida de cambios añadidos, PR/QA manual pendientes. Trello solo lectura; sin commits ni push.
+
+## Foco de aceptación
+
+- Puntajes 0/1/2/3/4/5: aprobado false/false/false/false/true/true; no porcentajes.
+- Selección modificable antes de confirmar, limpia al avanzar; respuestas confirmadas congeladas y preservadas.
+- Último feedback legible antes del resultado; fin único después de continuar, en coherencia con C2-17/27 además de C2-23.
+- Duplicados en un mismo batch y handlers retenidos no responden ni finalizan dos veces.
+- Datos inválidos, incluso 5×4 malformados, no generan resultados/callbacks; sin API ni tiempo de intento.
+
+## Evidencia final de Jhaelin
+
+| Comando / comprobación | Resultado nuevo |
+|---|---|
+| `npm run typecheck` | Código 0; resuelto el import de valor de Jest que fallaba en baseline |
+| `npm run lint` | Código 1, solo `src/hooks/use-color-scheme.web.ts:11`, `react-hooks/set-state-in-effect`, preexistente y no modificado |
+| `npx eslint tests/quiz/fixtures.ts tests/quiz/quiz-state.test.ts tests/quiz/QuizEngine.test.tsx tests/quiz/QuizDemo.test.tsx` | Código 0, sin warnings |
+| `npm test -- --runInBand` | Código 0; **37/37 pruebas, 5 suites**, 9,577 s; sin warnings de act |
+| `CI=1 npx expo export --platform web` | Código 0; conserva `/`, `/explore`, `/pruebas`, `/_sitemap`, `/+not-found` |
+| JS/HTML de `dist/`: `lesson-mock`, `basics-1`, `long-question`, `SOLO PRUEBAS` | Sin coincidencias; fixtures/preview no entran en release |
+| Revisión independiente de diff, criterios y calidad de aserciones | Sin defectos concretos/bloqueantes; no sustituye revisión de PR del equipo |
+
+Cambios de código: `tests/quiz/fixtures.ts`, `quiz-state.test.ts`, `QuizEngine.test.tsx` y el import de Jest en `QuizDemo.test.tsx`. Once pruebas netas nuevas; las siete funcionalidades estaban en la base integrada y se conservaron. No se alteraron producción, `Timer.tsx`, `quizService.js`, glosario ni dependencias. No se cambia producción para aparentar una implementación nueva cuando la base ya cumple.
+
+Estado: entrega local lista para revisión técnica de C2-03/08/12/13/17/23/27; no se afirma Done. Falta PR, QA móvil/manual y aceptación/acuerdos del equipo. Trello fue consultado, no modificado. Lint global continúa fallando por el baseline y el export no prueba ejecución E2E/dispositivos.
+
+---
+
+# Corrección anterior de responsabilidades y ubicaciones
 
 El usuario solicitó aplicar la revisión arquitectónica posterior. Esta sección sustituye las decisiones incompatibles de las ejecuciones inferiores; no amplía el alcance a Backend, autenticación o materias ausentes.
 

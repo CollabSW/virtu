@@ -4,6 +4,8 @@
 
 El árbol de la magíster y las tarjetas vigentes de https://trello.com/b/rAeH5rhS/calculo-virtu sustituyen la arquitectura anterior `src/core/quiz/`. El usuario aprobó implementar C2-01/05/10/15/20/21/25 (Matías) y las dependencias locales imprescindibles. Este documento es el contrato interno de C2-25, **no la publicación definitiva de motores para las seis materias**, que corresponde a Sprint 2.
 
+El alcance solicitado ahora incluye también las siete tarjetas propuestas para `jhaelin.alvarado`: **C2-03/08/12/13/17/23/27**. Se consultaron autenticadamente las tarjetas completas. La base ya implementa selección, bloqueo, cálculo, avance y resultados; se conserva, se agrupa el mock por lección y se amplía la evidencia automatizada, sin atribuir una implementación nueva a otra persona ni declarar PR aprobada. Estado detallado y resultados nuevos en `specs/core/tasks.md` y `specs/core/plan.md`.
+
 SDD vigente: [spec](specs/core/spec.md), [diseño](specs/core/design.md), [tareas](specs/core/tasks.md), [plan y evidencia](specs/core/plan.md). ERS v1.0 no aportado; no se declara cumplimiento integral.
 
 ## Ubicaciones aprobadas
@@ -14,7 +16,7 @@ SDD vigente: [spec](specs/core/spec.md), [diseño](specs/core/design.md), [tarea
 | `quiz/components/QuestionCard.tsx` | Pregunta, cuatro alternativas, selección y solicitud de confirmar |
 | `quiz/components/FeedbackModal.tsx` | Corrección inmediata, explicación/solución y continuar; no puntaje |
 | `quiz/screens/ResultScreen.tsx` | Aciertos sobre cinco, aprobación y revisión de respuestas/errores |
-| `quiz/quizService.js` | Envío de notas/registro de intentos previsto para Sprint 2; sin implementación ni placeholder mientras falte contrato API |
+| `quiz/quizService.js` | Archivo vacío incorporado por el pull de C2-02; envío de notas/registro de intentos pendiente de contrato real en Sprint 2 |
 | `glossary/screens/GlossaryScreen.tsx` | Lista, búsqueda, detalle heterogéneo y estado sin coincidencias |
 | `glossary/glossaryService.js` | Contrato de datos, selección por materia y filtrado textual local |
 
@@ -39,7 +41,23 @@ export function LessonQuiz({ lessonId, questions }: { lessonId: string; question
 }
 ```
 
-Selección única → confirmar sin posibilidad de edición → feedback/solución → continuar → siguiente pregunta/resultados. No se revela la explicación antes de confirmar. Resultado solo para intento completo; permite revisar aciertos/errores y soluciones de incorrectas. Los callbacks son notificaciones síncronas, una por respuesta/intento, y no deben lanzar ni recalcular la nota.
+Selección única → confirmar sin posibilidad de edición → feedback → continuar → siguiente pregunta/resultados. El feedback muestra la explicación y, ante un error, el texto de la alternativa correcta. El resultado requiere un intento completo y permite revisar aciertos, errores y soluciones. Los callbacks son notificaciones síncronas, una por respuesta/intento, y no deben lanzar ni recalcular la nota.
+
+### Datos y comprobaciones de Jhaelin
+
+`mobile/tests/quiz/fixtures.ts` exporta `lessonQuizFixture` (`lessonId: 'lesson-mock'`, `questions: exampleQuestions`), cinco preguntas de cuatro alternativas. `quizAnswerFixtures` conserva los IDs de elecciones correctas e incorrectas; los datos ficticios no se trasladan a `src/`.
+
+Las pruebas de lógica y UI recorren los seis resultados: **0/5, 1/5, 2/5 y 3/5 no aprueban; 4/5 y 5/5 aprueban**. Un cuestionario incompleto/malformado no emite resultado. La última confirmación bloquea la respuesta y muestra su feedback; después de pulsar continuar se pasa un único `QuizResult` a `ResultScreen`, preservando el orden didáctico de C2-17/27 y evitando saltarse la explicación final.
+
+Comprobación enfocada desde `mobile/`:
+
+```sh
+npm test -- --runInBand tests/quiz/quiz-state.test.ts tests/quiz/QuizEngine.test.tsx
+```
+
+Estas son pruebas de caracterización sobre implementación existente, no una afirmación retroactiva de TDD ni QA de dispositivos. No se modifica glosario, Timer o API para completar estas tarjetas. Los archivos vacíos del pull del equipo se preservan sin implementación ficticia.
+
+Resultado de esta ejecución: **37/37 pruebas en 5 suites** (26 en baseline), TypeScript y lint de archivos tocados aprobados; export web aprobado sin IDs de fixtures/aviso en release. Se corrigió un import de Jest que impedía compilar las pruebas existentes. Lint global sigue fallando únicamente por el hook web preexistente. Las siete tarjetas están verificadas localmente y listas para revisión, no Done; no se modificó Trello ni se hizo commit/push.
 
 ## Glosario: contrato mínimo de integración
 
@@ -47,7 +65,7 @@ Selección única → confirmar sin posibilidad de edición → feedback/soluci�
 
 Cada entrada tiene `id`, `subject` y `title`, además de campos opcionales de contenido: `definition`, `topic`, `rendering`, `date`, `character`, `timeline`, `concept`, `videoUrl`, `vocabulary`, `audioUrl`, `example`, `front`, `back`, `symbol`, `atomicNumber`, `properties`. `subject`: `calculo`, `historia`, `fisica`, `ingles`, `biologia` o `quimica`. El detalle usa los campos aportados, no se limita a término/definición. Referencias multimedia se muestran como datos en este alcance, no como reproductores inexistentes.
 
-Los ejemplos representativos viven exclusivamente en `mobile/tests/quiz/QuizDemo.tsx`. No son contenido definitivo de las materias. El preview existente `/pruebas` conserva aviso explícito y guard `__DEV__`; release redirige sin cargar datos ficticios.
+Los ejemplos representativos viven en `mobile/tests/glossary/fixtures.ts`. El preview `/pruebas` los consume desde `mobile/tests/quiz/QuizDemo.tsx` con un aviso explícito. La versión de producción redirige a Inicio.
 
 ## Verificación y pendientes
 

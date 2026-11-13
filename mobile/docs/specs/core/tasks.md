@@ -1,6 +1,85 @@
 # Virtu Core 2 — tareas y aceptación vigentes
 
-Fuente vigente: árbol compartido por el usuario y lectura autenticada de las 28 tarjetas del tablero https://trello.com/b/rAeH5rhS/calculo-virtu. Las siete siguientes dicen «Responsable propuesto: matias Moron», sin miembros asignados, en lista `to Do`, `complete: false` al consultarlas. No se modifica Trello ni se afirma aprobación de PR. Usuario aprobó implementar estas siete y sus dependencias mínimas.
+## Revisión del tablero del 11 de noviembre de 2026
+
+El [tablero Calculo Virtu](https://trello.com/b/rAeH5rhS/calculo-virtu) devuelve 29 tarjetas abiertas: 26 de Core 2 y tres de coordinación. Hay ocho en `to Do` (cinco técnicas), 21 en `review` y ninguna en `Done`. C2-03 y C2-17 se conservan abajo como referencias históricas: sus enlaces ya no fueron accesibles, pero el fixture por lección y el avance después del feedback siguen en el código y las pruebas.
+
+- **C2-08, C2-12, C2-13, C2-23 y C2-27** siguen en `to Do` en Trello. El checkout ya incluye selección única, bloqueo irreversible, resultados de 0 a 5, aprobación desde 4/5 y un solo cierre después del último feedback. `QuizEngine.test.tsx` y `quiz-state.test.ts` cubren esos recorridos.
+- **C2-10, C2-15 y C2-27**. El modal ahora muestra la alternativa correcta y la explicación tras un error. Una prueba verifica que la alternativa solo se revela tras confirmar.
+- **C2-26**. El progreso, los identificadores de opciones y el texto de las preguntas en resultados usan 16 sp. El indicador de selección tiene contraste suficiente en ambos temas. La prueba en Android reveló que el desplazamiento de la pregunta anterior se conservaba al avanzar. Se corrigió y se verificaron las transiciones hasta resultados. Ver [evidencia y pendientes](plan.md#evidencia-de-la-revisión-del-11-de-noviembre-de-2026).
+- **Core 1**. `develop` (`7a5ce1a`) y `leadCore1` (`7c87b37`) son ancestros de `core2`. El único conflicto del merge `6977654` fue el README, que documenta los dos puntos de entrada. La convergencia de la base JavaScript de la raíz y la app TypeScript de `mobile/` requiere un acuerdo de integración.
+- **Comentarios en GitHub**. La tarjeta carece de descripción, checklist y referencias a issues. La búsqueda del repositorio no devolvió issues.
+
+Los estados de Trello siguen sujetos a revisión de PR y a los acuerdos entre equipos.
+
+Abreviaturas: **Q** = `src/shared/features/quiz/`, **G** = `src/shared/features/glossary/`. Tests aislados en `tests/`; contratos en `Q/screens/QuizScreen.tsx`, no nuevos tipos/hooks/barrels.
+
+| ID / tarjeta | Responsable propuesto | Criterio / fuente de implementación y comprobación |
+|---|---|---|
+| [C2-01](https://trello.com/c/71nB1Lh5) | Matías | Contrato lección/5×4/una correcta; QuizScreen + TypeScript; acuerdo Core 1/Backend pendiente |
+| [C2-02](https://trello.com/c/vGCZqJ7G) | Oliver | Seis nombres del árbol Q presentes; Timer/servicio vacíos del pull preservados; API explícitamente Sprint 2 |
+| [C2-03](https://trello.com/c/4hQE17LS) | Jhaelin | Mock por lección 5×4, clave/explicación; `tests/quiz/fixtures.ts` |
+| [C2-04](https://trello.com/c/LB6JXXqy) | Esteban | Modelo heterogéneo de seis materias en G/glossaryService y fixtures separados de UI |
+| [C2-05](https://trello.com/c/TFuhybMe) | Matías | QuizScreen configurable, error seguro ante inválidos, sin dependencia de materias |
+| [C2-06](https://trello.com/c/Sw78XAdU) | Oliver | QuestionCard con cuatro alternativas, texto/fórmulas largas y layout desde 360 dp |
+| [C2-07](https://trello.com/c/WS6Le92m) | Oliver | Selección visual única y accesible mediante selectedOptionId |
+| [C2-08](https://trello.com/c/qzEJsW14) | Jhaelin | Selección única, cambio previo a confirmar, reset al avanzar sin calificar selección |
+| [C2-09](https://trello.com/c/19xR6iQU) | Esteban | GlossaryScreen: lista genérica/detalle según datos, sin pantallas de materia |
+| [C2-10](https://trello.com/c/DmR0bhdF) | Matías | FeedbackModal: acierto/error, solución inmediata, sin cálculo de puntaje |
+| [C2-11](https://trello.com/c/nHlhQTdX) | Oliver | Confirmar disabled sin selección; callback por acción, separado de pulsación de opción |
+| [C2-12](https://trello.com/c/y1o7IgdP) | Jhaelin | Respuesta irreversible e inmutable, confirmación sin duplicados |
+| [C2-13](https://trello.com/c/DomLsC2A) | Jhaelin | Aciertos 0..5, aprobado desde 4; incompletos no válidos; sin duración |
+| [C2-14](https://trello.com/c/ehsGjomM) | Esteban | SearchBar compartido integrado: escribir/limpiar consulta |
+| [C2-15](https://trello.com/c/txoixMb6) | Matías | Confirmación bloquea y abre feedback sin revelar antes la solución |
+| [C2-16](https://trello.com/c/YKye2d7t) | Oliver | QuestionCard + botón + estado central integrados sin lógica duplicada |
+| [C2-17](https://trello.com/c/rGVF6gdf) | Jhaelin | Avance tras feedback, respuestas preservadas, fin detectado |
+| [C2-18](https://trello.com/c/cfJWP61c) | Esteban | Búsqueda sobre todos los campos textuales; ignore-case, vacía muestra todo, opcionales seguros |
+| [C2-19](https://trello.com/c/ldfv6ZJk) | Esteban | Sin coincidencias: mensaje informativo y posibilidad de limpiar |
+| [C2-20](https://trello.com/c/QuvXXLVG) | Matías | Tests de score/aprobación/bloqueo/duplicados, sin duración |
+| [C2-21](https://trello.com/c/ST0UMVPK) | Matías | Fixture válido 5×4/largo, 0/1 preguntas únicamente como rechazo seguro |
+| [C2-22](https://trello.com/c/TvouJtJP) | Oliver | ResultScreen: aciertos/aprobación/revisión y soluciones erróneas, sin recalcular |
+| [C2-23](https://trello.com/c/CchJ1wIg) | Jhaelin | Resultado correcto a vista real, fin una vez preservando último feedback |
+| [C2-24](https://trello.com/c/WRT9aqUc) | Esteban | Detalle de seis materias según campos propios; no limitar a term/definition |
+| [C2-25](https://trello.com/c/jIilr05m) | Matías | Guía de contratos/rutas/pruebas locales; publicación formal Sprint 2 explícitamente pendiente |
+| [C2-26](https://trello.com/c/kklid2r8) | Oliver | QA Android 360 dp, cuerpo >=16 sp, contraste 4.5:1 y sin overflow; no confundir renderer/web con Android |
+| [C2-27](https://trello.com/c/5u9BrjLf) | Jhaelin | Flujo válido completo y rechazo seguro, sin API |
+| [C2-28](https://trello.com/c/LdKEuye4) | Esteban | Flujo lista/detalle/búsqueda seis materias, ignore-case/vacío/opcionales |
+
+### Comprobaciones y pendientes
+
+- [x] Fixtures y pruebas de búsqueda textual por campo, materia, opcionales y lista vacía.
+- [x] Datos ficticios en `tests/glossary/fixtures.ts`, consumidos por el preview con aviso y guard de desarrollo.
+- [x] Pruebas de GlossaryScreen para las seis materias y de QuestionCard para texto largo, cuatro opciones y confirmación.
+- [x] Colores del texto verde corregidos en ambos temas y cubiertos por `QuestionCard.test.tsx`.
+- [x] Hidratación web y cambio de tema cubiertos por `tests/hooks/use-color-scheme.web.test.tsx`.
+- [x] Recorrer la demo del cuestionario en Android a 360 dp con texto largo, feedback, avance y resultados.
+- [ ] Revisar C2-26 con TalkBack y en un dispositivo físico.
+
+Los directorios `modules/`, panel docente, servicios de sesión/progreso/BD y archivos AuthNavigator/apiConfig/MathRenderer son ubicaciones del árbol general, **no tarjetas adicionales** del tablero consultado. No se crean implementaciones ficticias ni conexiones MySQL directas desde móvil. Si sus contratos se incorporan en tarjetas de otro sprint, deberán revisarse antes de implementarlos.
+
+---
+
+## Jhaelin Alvarado — alcance solicitado ahora
+
+Fuente: consulta autenticada del tablero https://trello.com/b/rAeH5rhS/calculo-virtu y de las siete tarjetas completas. Miembro `jhaelinalvarado`, nombre `jhaelin.alvarado`; responsabilidad **propuesta** en descripción, sin asignación formal. Snapshot inicial: C2-03 en `review`, las otras seis en `In progress`, todas `complete: false`, sin comentarios/checklists. No se cambia Trello ni se afirma revisión de PR.
+
+| Tarjeta | Criterio y evidencia requerida | Dependencias locales | Estado local |
+|---|---|---|---|
+| [C2-03](https://trello.com/c/4hQE17LS) | Mock por lección, cinco preguntas/cuatro opciones, clave y explicación | C2-01: tipos reales disponibles | Verificada localmente: `lessonQuizFixture` en `tests/quiz/fixtures.ts`, consumido por ambas suites |
+| [C2-08](https://trello.com/c/qzEJsW14) | Selección única y limpia al avanzar; no calificar al seleccionar | C2-01/03 | Verificada: pruebas puras y UI A→B, una selección marcada, sin onAnswer hasta confirmar y siguiente pregunta limpia |
+| [C2-12](https://trello.com/c/y1o7IgdP) | Confirmación irreversible y eventos deduplicados | C2-08 | Verificada: referencias congeladas, guards, eventos repetidos y selección posterior sin editar respuesta |
+| [C2-13](https://trello.com/c/DomLsC2A) | Todos los aciertos 0..5, aprobado desde 4, incompletos rechazados, sin duración | C2-01/12 | Verificada: seis casos puros y seis recorridos UI, aprobado false/false/false/false/true/true |
+| [C2-17](https://trello.com/c/rGVF6gdf) | Avanzar solo tras feedback, preservar respuestas y detectar última | C2-12/15 integradas | Verificada: guard antes de confirmar, reset/preservación y progreso ordenado 1..5 |
+| [C2-23](https://trello.com/c/CchJ1wIg) | Resultado real a ResultScreen y fin único | C2-13/17/22 disponibles | Verificada: payload completo/ordenado, resultado real, fin único y última explicación antes de continuar |
+| [C2-27](https://trello.com/c/5u9BrjLf) | Flujo válido real y 5×4 malformado sin completado/calificación; sin API | C2-15/16/20/23 disponibles | Verificada por integración automatizada; suite global 37/37, QA manual y PR pendientes |
+
+Implementación en `src/shared/features/quiz/`; pruebas/fixtures en `tests/quiz/`. Se conservan las dependencias funcionales existentes, sin atribuir autoría nueva ni PR aprobada a otro integrante. Conclusión/comandos nuevos en [plan.md](plan.md).
+
+Las siete están técnicamente verificadas en este checkout, **no Done**: ninguna aprobación de PR, QA de dispositivo o acuerdo formal del equipo se deriva de estas pruebas. Se añadieron once casos netos (26→37) y se corrigió el import de Jest; no fue necesario cambiar producción. No se movieron tarjetas ni se publicaron comentarios, commits o push.
+
+## Registro anterior de tareas de Matías
+
+Fuente: árbol del usuario y consulta anterior de 28 tarjetas. Las siete siguientes dicen «Responsable propuesto: matias Moron»; estaban en `to Do` al consultarlas entonces. Sus listas remotas han cambiado después; no usar este registro como snapshot actual. Usuario aprobó esas siete y sus dependencias mínimas.
 
 Rutas relativas a `mobile/src/shared/features/`:
 

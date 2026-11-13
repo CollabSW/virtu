@@ -75,7 +75,7 @@ export const quizFixtures: {
   long: exampleQuestions.map((question, index) => index === 0 ? {
     ...question,
     id: 'long-question',
-    text: `${question.text} ${'Lee con atención todos los detalles antes de responder. '.repeat(20)}`,
+    text: `${question.text} f(x) = ax² + bx + c; x → ∞; ∑ₙ₌₁ᵐ n². ${'Lee con atención todos los detalles antes de responder. '.repeat(20)}`,
     options: question.options.map((option) => ({
       ...option,
       text: `${option.text}: ${'Una explicación extensa con información adicional para evaluar respuestas de longitud considerable. '.repeat(5)}`,
@@ -88,4 +88,9 @@ export const quizAnswerFixtures = {
   incorrectOptionIds: exampleQuestions.map(
     (question) => question.options.find((option) => option.id !== question.correctOptionId)!.id,
   ),
+} as const;
+
+export const lessonQuizFixture = {
+  lessonId: 'lesson-mock',
+  questions: exampleQuestions,
 } as const;

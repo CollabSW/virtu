@@ -4,6 +4,10 @@
 
 El usuario aprobó implementar las siete tarjetas de Matías y sus dependencias mínimas siguiendo el árbol de la magíster y las descripciones vigentes del tablero https://trello.com/b/rAeH5rhS/calculo-virtu. Estas reglas sustituyen la reorganización anterior a `src/core/quiz/`. El ERS v1.0 y el borrador completo no fueron aportados: no se afirma cumplimiento integral de esos documentos.
 
+Ampliación solicitada: completar las siete tarjetas propuestas para `jhaelin.alvarado` (C2-03/08/12/13/17/23/27). Reutilizar la base funcional y reforzar aceptación/fixtures/pruebas sin cambiar arquitectura ni volver a porcentajes. Estados remotos solo consultados; PR y QA manual siguen pendientes.
+
+**Ampliación vigente posterior:** revisar y completar las **28 tarjetas** C2-01..28 del mismo tablero, respetando el árbol proporcionado. Las reglas del cuestionario no cambian. El glosario se verifica ahora contra todas sus tarjetas C2-04/09/14/18/19/24/28, no solo como dependencia de documentación. La matriz actual está al inicio de `tasks.md`; no se agregan funcionalidades de autenticación/BD/materias/panel docente sin tarjetas o contratos reales.
+
 ## Arquitectura obligatoria del alcance
 
 ```text
@@ -25,7 +29,7 @@ Las features compartidas reciben datos/callbacks; no importan materias ni rutas.
 
 Configuración global en `src/config/theme.js`; navegación existente en `src/navigation/AppNavigator.tsx`, conservando `src/app/_layout.tsx` como puente obligatorio de Expo Router. Controles comunes implementados y consumidos en `src/shared/components/{Button,Card,Header,SearchBar}.tsx`; no deben conocer materias ni transiciones de cuestionario. Se mantienen adaptadores/efectos heredados del starter sin presentarlos como entregables faltantes del árbol. AuthNavigator, apiConfig, MathRenderer, servicios comunes, panel docente y materias permanecen pendientes, no se rellenan con archivos vacíos.
 
-La validación, snapshot, transiciones y cálculo local pertenecen a `QuizScreen.tsx`. `quizService.js` tiene otra responsabilidad explícita: envío de notas y registro de intentos. No alojar allí una máquina de estado para justificar su presencia antes de tener el contrato de API. No se conserva un placeholder del servicio.
+La validación, snapshot, transiciones y cálculo local pertenecen a `QuizScreen.tsx`. `quizService.js` tiene otra responsabilidad explícita: envío de notas y registro de intentos. No alojar allí una máquina de estado antes de tener el contrato de API. Un pull posterior de C2-02 incorporó `Timer.tsx` y `quizService.js` vacíos: se preservan como aportación del equipo, sin rellenarlos ni afirmar que implementan API/timer.
 
 ## Aceptación de cuestionario — Sprint 1
 
@@ -41,11 +45,17 @@ La validación, snapshot, transiciones y cálculo local pertenecen a `QuizScreen
 
 IDs/textos no vacíos, preguntas/opciones sin IDs duplicados y clave correcta existente. Validar también formas malformadas de entrada para no confiar únicamente en anotaciones TypeScript. Snapshot de preguntas durante el intento; una `key` nueva inicia otro. Callbacks una vez por respuesta/intento, incluso con StrictMode, acciones duplicadas o handlers retenidos. No hay notificación de completado para entradas inválidas. Resultado permite revisar respuestas y soluciones de errores; el cálculo es único.
 
+### Aceptación específica de Jhaelin
+
+C2-03 exige mock separado por lección 5×4. C2-08: cambio de selección antes de confirmar y selección limpia en la siguiente pregunta, sin nota por seleccionar. C2-12: elección inmutable y confirmaciones deduplicadas. C2-13: **todos** los resultados 0/1/2/3/4/5; solo 4 y 5 aprueban, incompletos inválidos y sin duración. C2-17: respuestas preservadas al avanzar. C2-23: resultado a la vista real una vez, conservando feedback de la última respuesta. C2-27: evidencia de flujo válido y 5×4 malformado rechazado sin callbacks de respuesta/completado. Trazabilidad y dependencias completas en `tasks.md`.
+
 ## Dependencia mínima de glosario para C2-25
 
 `glossaryService.js` consume datos del llamador y permite búsqueda textual multicampo sin distinguir mayúsculas ni fallar por opcionales. `GlossaryScreen.tsx` presenta lista, consulta limpiable, detalle según datos y estado sin resultados. Ejemplos de Cálculo (temática/título/definición/renderización), Historia (dato/fecha/personaje/línea temporal), Física (concepto/video), Inglés (vocabulario/audio/ejemplo), Biología (flashcard) y Química (propiedades de elemento). No limitar el modelo a term/definition. Reproducción multimedia y contenido final de materias no se inventan.
 
 ## Pruebas, entrega y límites
+
+El dato ficticio de seis materias debe vivir fuera de UI/producción en `tests/glossary/`; los tests comprueban lista/detalle/búsqueda de cada materia, opcionales, consulta vacía y sin resultados. La consulta se limita a los campos textuales establecidos por C2-18. C2-26 requiere evidencia de Android desde 360 dp, cuerpo >=16 sp, contraste al menos 4,5:1 cuando corresponde y sin overflow horizontal. Unit tests, cálculo de contraste y viewport web aportan evidencia, pero no sustituyen un dispositivo/emulador Android.
 
 Pruebas/fixtures/demo permanecen en `mobile/tests/`; solo el preview existente protegido por `__DEV__` puede cargarlos desde la app. Debe mostrar aviso de datos ficticios; release no carga el material. No nuevas rutas de demo ni archivos de pruebas obligatorios. No servicios externos ni variables de entorno para las pruebas locales.
 

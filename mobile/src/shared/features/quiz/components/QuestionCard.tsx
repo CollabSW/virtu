@@ -32,12 +32,12 @@ export function QuestionCard({ question, selectedOptionId, disabled, onSelect, o
               style={[
                 styles.option,
                 {
-                  borderColor: selected ? '#39866b' : theme.textSecondary,
+                  borderColor: selected ? theme.success : theme.textSecondary,
                   backgroundColor: selected ? theme.backgroundSelected : theme.background,
                 },
               ]}
             >
-              <ThemedText type="smallBold" style={[styles.optionIndex, { color: theme.text }]}>
+              <ThemedText style={styles.optionIndex}>
                 {String.fromCharCode(65 + index)}
               </ThemedText>
               <ThemedText style={styles.optionText}>{option.text}</ThemedText>
@@ -70,6 +70,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionIndex: {
+    fontWeight: '700',
     minWidth: 28,
     minHeight: 28,
     borderRadius: 18,

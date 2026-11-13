@@ -6,6 +6,8 @@ El usuario aprobó restituir las features del alcance en `mobile/src/shared/feat
 
 Alternativas consideradas: conservar `src/core/quiz/` contradice explícitamente el árbol y C2-05; añadir fachadas conservaría dos ubicaciones y archivos no aprobados. Se elige una implementación única en los nombres originales, reutilizando presentación y controles existentes. No se rediseña la app ni se desarrollan módulos de materias ajenos al alcance.
 
+La revisión completa de las 28 tarjetas mantiene esa decisión: no agrega backend, autenticación o materias porque no forman parte de las tarjetas consultadas. Los gaps se resuelven en componentes/servicios ya aprobados y suites separadas. El fixture heterogéneo se extrae a `tests/glossary/fixtures.ts`, con dependencia tests→producción; solo el preview protegido puede consumirlo.
+
 ## Dependencias vigentes
 
 ```text
@@ -27,13 +29,15 @@ Los tipos públicos TypeScript de cuestionario se exportan desde `QuizScreen.tsx
 
 La lógica pura local vive en `QuizScreen.tsx` con tipos TypeScript: snapshot validado 5×4, selección, confirmación, avance y resultado. No necesita archivo auxiliar. El estado guarda lección, preguntas congeladas, índice, selección, respuestas y fase. Transiciones: answering → feedback → answering/completed. Las entradas inválidas no crean un intento válido; la pantalla captura el error y no notifica onComplete.
 
-`quizService.js` es el archivo objetivo del envío de notas y registro de intentos en Sprint 2. Se retira su implementación incorrecta de máquina de estados: no hay llamadas ni placeholder hasta disponer de un contrato real. Las pruebas de lógica importan las funciones exportadas desde QuizScreen; ningún componente importa el servicio de envío para controlar selección/avance.
+`quizService.js` es el archivo objetivo del envío de notas y registro de intentos en Sprint 2. Se retiró su máquina de estados; el pull posterior de C2-02 añadió el nombre como archivo vacío junto a `Timer.tsx`. Se preservan esos archivos del equipo sin simular API/timer. Las pruebas de lógica importan las funciones de QuizScreen; ningún componente importa el servicio para controlar selección/avance.
 
 El resultado incluye lessonId, totalQuestions=5, correctAnswers, score (aciertos 0–5), passed (>=4) y answers. Solo existe resultado de un intento completo. No se registra duración ni se cambia el contenido del intento al mutar props; nueva key para reiniciar. Los handlers están vinculados a fase/índice y callbacks actuales para evitar eventos duplicados/obsoletos y problemas de StrictMode.
 
 El glosario recibe entries y subject opcional; el contrato JSDoc de `glossaryService.js` contempla las seis materias y campos textuales opcionales de sus detalles (definición/temática/fecha/personaje/línea temporal/concepto/video/vocabulario/audio/ejemplo/flashcard/elemento). Búsqueda sobre contenido textual, no solo título; consulta vacía conserva lista, cero coincidencias muestra estado explícito y permite limpiar. No reproductores multimedia ni renderizadores de fórmulas inventados en esta dependencia mínima.
 
 ## Pruebas y límites
+
+La ampliación de Jhaelin reutiliza controlador y vistas: no hay segundo scorer ni estado paralelo. Los fixtures agrupan lección/preguntas fuera de producción. Las suites existentes recorren las seis notas 0..5 y resultados esperados explícitos, sin obtener el esperado del cálculo que se prueba. UI renderiza QuizScreen/ResultScreen reales. Si el test pasa en la base existente se declara caracterización, no un RED inventado.
 
 Se actualizan las suites existentes bajo `mobile/tests/quiz/`; los datos ficticios no entran en producción. El preview existente conserva su guard `__DEV__` y muestra ambos contratos sin abrir rutas nuevas. La ruta release redirige sin cargar la demo.
 

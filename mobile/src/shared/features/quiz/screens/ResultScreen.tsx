@@ -21,7 +21,7 @@ export function ResultScreen({ questions, result }: Props) {
         const correct = question.options.find((option) => option.id === question.correctOptionId);
         return (
           <Card key={question.id} style={styles.item}>
-            <ThemedText type="smallBold">
+            <ThemedText style={styles.question}>
               Pregunta {index + 1}: {question.text}
             </ThemedText>
             <ThemedText>
@@ -40,5 +40,6 @@ const styles = StyleSheet.create({
   content: { padding: 24, gap: 16 },
   summary: { alignItems: 'center', padding: 24, borderRadius: 24, gap: 8 },
   score: { fontSize: 48, lineHeight: 56 },
+  question: { fontWeight: '700' },
   item: { padding: 18, borderRadius: 18, gap: 8 },
 });
