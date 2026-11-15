@@ -1,6 +1,5 @@
 import * as Device from 'expo-device';
 import { Platform, StyleSheet } from 'react-native';
-import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedIcon } from '@/components/animated-icon';
@@ -8,7 +7,7 @@ import { HintRow } from '@/components/hint-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/config/theme';
+import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 
 function getDevMenuHint() {
   if (Platform.OS === 'web') {
@@ -57,11 +56,6 @@ export default function HomeScreen() {
         </ThemedView>
 
         {Platform.OS === 'web' && <WebBadge />}
-        {__DEV__ && (
-          <Link href="/pruebas" accessibilityRole="button" style={styles.testLink}>
-            <ThemedText type="link">Cuestionario de pruebas · solo datos ficticios</ThemedText>
-          </Link>
-        )}
       </SafeAreaView>
     </ThemedView>
   );
@@ -94,7 +88,6 @@ const styles = StyleSheet.create({
   code: {
     textTransform: 'uppercase',
   },
-  testLink: { padding: Spacing.three, textAlign: 'center' },
   stepContainer: {
     gap: Spacing.three,
     alignSelf: 'stretch',

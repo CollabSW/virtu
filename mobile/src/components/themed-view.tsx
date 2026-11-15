@@ -1,6 +1,6 @@
 import { View, type ViewProps } from 'react-native';
 
-import type { ThemeColor } from '@/config/theme';
+import { ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedViewProps = ViewProps & {
