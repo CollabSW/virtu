@@ -5,6 +5,7 @@ import '@/global.css';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppNavigator from '@/navigation/AppNavigator';
+import { AuthProvider } from '@/shared/context/AuthContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -13,7 +14,9 @@ export default function TabLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AnimatedSplashOverlay />
-      <AppNavigator />
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
