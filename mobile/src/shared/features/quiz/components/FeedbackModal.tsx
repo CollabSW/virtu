@@ -13,6 +13,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
 import { Button } from '@/shared/components/Button';
+import MathText from '@/shared/components/MathText';
 
 type Props = {
   visible: boolean;
@@ -20,10 +21,11 @@ type Props = {
   explanation: string;
   correctOptionText?: string;
   onContinue: () => void;
+  renderMath?: boolean;
 };
 type Session = { token: symbol | null; active: boolean; used: boolean };
 
-export function FeedbackModal({ visible, isCorrect, explanation, correctOptionText, onContinue }: Props) {
+export function FeedbackModal({ visible, isCorrect, explanation, correctOptionText, onContinue, renderMath = false }: Props) {
   const theme = useTheme();
   const heading = useRef<Text>(null);
   const priorVisibility = useRef(false);
@@ -91,9 +93,10 @@ export function FeedbackModal({ visible, isCorrect, explanation, correctOptionTe
           </Text>
           <ScrollView style={styles.explanationScroll} contentContainerStyle={styles.explanation}>
             {!isCorrect && correctOptionText && (
-              <ThemedText>{`Respuesta correcta: ${correctOptionText}`}</ThemedText>
+              renderMath ? <View><ThemedText>Respuesta correcta:</ThemedText><MathText text={correctOptionText} standalone /></View>
+                : <ThemedText>{`Respuesta correcta: ${correctOptionText}`}</ThemedText>
             )}
-            <ThemedText>{explanation}</ThemedText>
+            {renderMath ? <MathText text={explanation} /> : <ThemedText>{explanation}</ThemedText>}
           </ScrollView>
           <Button
             title="Continuar"

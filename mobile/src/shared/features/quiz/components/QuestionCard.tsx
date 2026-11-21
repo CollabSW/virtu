@@ -3,21 +3,24 @@ import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
 import { Button } from '@/shared/components/Button';
 import { Card } from '@/shared/components/Card';
+import MathText from '@/shared/components/MathText';
 import type { Question } from '../screens/QuizScreen';
 
 type Props = {
-  question: Question;
+  question: Pick<Question, 'id' | 'text' | 'options'>;
   selectedOptionId: string | null;
   disabled: boolean;
   onSelect: (id: string) => void;
   onConfirm: () => void;
+  renderMath?: boolean;
 };
 
-export function QuestionCard({ question, selectedOptionId, disabled, onSelect, onConfirm }: Props) {
+export function QuestionCard({ question, selectedOptionId, disabled, onSelect, onConfirm, renderMath = false }: Props) {
   const theme = useTheme();
   return (
     <Card style={styles.card}>
-      <ThemedText type="subtitle" style={styles.question}>{question.text}</ThemedText>
+      {renderMath ? <MathText text={question.text} type="subtitle" textStyle={styles.question} />
+        : <ThemedText type="subtitle" style={styles.question}>{question.text}</ThemedText>}
       <View accessibilityRole="radiogroup" accessibilityLabel="Opciones de respuesta" style={styles.options}>
         {question.options.map((option, index) => {
           const selected = option.id === selectedOptionId;
@@ -40,7 +43,8 @@ export function QuestionCard({ question, selectedOptionId, disabled, onSelect, o
               <ThemedText style={styles.optionIndex}>
                 {String.fromCharCode(65 + index)}
               </ThemedText>
-              <ThemedText style={styles.optionText}>{option.text}</ThemedText>
+              {renderMath ? <View pointerEvents="none" style={styles.optionText}><MathText text={option.text} standalone /></View>
+                : <ThemedText style={styles.optionText}>{option.text}</ThemedText>}
             </Pressable>
           );
         })}

@@ -17,7 +17,9 @@ describe('Glosario C2-28', () => {
     const entries = screen.getAllByRole('button').filter((button) => button.props.accessibilityLabel !== 'Limpiar búsqueda');
     expect(entries).toHaveLength(1);
     await fireEvent.press(screen.getByRole('button', { name: new RegExp(title) }));
-    expect(screen.getByText(detail)).toBeTruthy();
+    expect(detail.startsWith('Representación: ')
+      ? screen.getByLabelText(`Fórmula: ${detail.slice('Representación: '.length)}`)
+      : screen.getByText(detail)).toBeTruthy();
   });
 
   it('encuentra Cloud sin audio y restaura la lista después de una búsqueda vacía de resultados', async () => {

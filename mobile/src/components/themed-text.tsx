@@ -33,12 +33,12 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
 
 const styles = StyleSheet.create({
   small: {
-    fontSize: 14,
+    fontSize: 16,
     lineHeight: 20,
     fontWeight: 500,
   },
   smallBold: {
-    fontSize: 14,
+    fontSize: 16,
     lineHeight: 20,
     fontWeight: 700,
   },

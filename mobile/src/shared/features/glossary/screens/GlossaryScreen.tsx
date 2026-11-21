@@ -4,6 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Card } from '@/shared/components/Card';
 import { Header } from '@/shared/components/Header';
+import MathFormula from '@/shared/components/MathFormula';
 import { SearchBar } from '@/shared/components/SearchBar';
 import { filterGlossaryEntries, getGlossaryEntries } from '../glossaryService';
 import type { GlossaryEntry, GlossarySubject } from '../glossaryService';
@@ -47,7 +48,9 @@ export function GlossaryScreen({ entries, subject, title = 'Glosario' }: Props) 
             <ThemedText type="smallBold">{subjectLabels[selected.subject]}</ThemedText>
             {Object.entries(selected)
               .filter(([key, value]) => key in fieldLabels && value !== undefined)
-              .map(([key, value]) => (
+              .map(([key, value]) => key === 'rendering' && typeof value === 'string' ? (
+                <MathFormula key={key} expression={value} />
+              ) : (
                 <ThemedText key={key}>
                   {`${fieldLabels[key]}: ${Array.isArray(value) ? value.join(', ') : value}`}
                 </ThemedText>

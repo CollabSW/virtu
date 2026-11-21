@@ -20,6 +20,8 @@ export async function apiRequest(path, { token = '', body = undefined } = {}) {
     if (!response.ok) {
       throw Object.assign(new Error(payload?.message || 'Virtu no pudo completar la solicitud.'), {
         status: response.status,
+        sessionExpired: response.status === 401 || (response.status === 403
+          && /token.*(inv[aá]lido|no es v[aá]lido|expir|venc)|jwt.*(expired|invalid)/i.test(payload?.message || '')),
       });
     }
     if (payload?.status !== 'success' || !('data' in payload)) {

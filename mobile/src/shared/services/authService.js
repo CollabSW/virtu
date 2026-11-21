@@ -22,6 +22,12 @@ export async function login(username, password) {
   return { token: result.token, usuario };
 }
 
+export async function registerStudent({ username, password, nombreCompleto, colegioId, cursoId }) {
+  return apiRequest('/auth/register', {
+    body: { username, password, nombreCompleto, colegioId, cursoId, rol: 'ESTUDIANTE' },
+  });
+}
+
 export async function getMe(token) {
   return validateUser(await apiRequest('/auth/me', { token }));
 }

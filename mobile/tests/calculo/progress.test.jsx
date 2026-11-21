@@ -36,7 +36,8 @@ test('refreshes official progress and only opens history for a quiz supplied by 
   expect(request).toHaveBeenNthCalledWith(2, '/contenidos/calculo');
 
   await fireEvent.press(screen.getByRole('button', { name: 'Ver historial de Regla de la cadena' }));
-  expect(await screen.findByText('4 de 5 aciertos · Nota 6.1')).toBeTruthy();
+  expect(await screen.findByText('4 de 5 aciertos')).toBeTruthy();
+  expect(screen.getByText('Nota 6.1')).toBeTruthy();
   expect(screen.getByText('Nota vigente')).toBeTruthy();
   expect(request).toHaveBeenNthCalledWith(3, '/cuestionarios/52/historial');
 });

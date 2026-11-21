@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
       token.current = saved;
       setUser(current);
     } catch (error) {
-      if (error.status === 401) {
+      if (error.status === 401 || error.sessionExpired) {
         try {
           await logout();
           setNotice('Tu sesión venció. Vuelve a iniciar sesión.');
@@ -74,7 +74,7 @@ export function AuthProvider({ children }) {
     try {
       return await apiRequest(path, { token: active, body });
     } catch (error) {
-      if (error.status === 401 && token.current === active) {
+      if ((error.status === 401 || error.sessionExpired) && token.current === active) {
         token.current = null;
         try {
           await authService.logout();

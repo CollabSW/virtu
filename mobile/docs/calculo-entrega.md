@@ -1,6 +1,10 @@
 # Cálculo · T01, T08, T11 y T14
 
+> Estado actual: [validación del 21 de noviembre](calculo-validacion-2026-11-21.md). Las notas siguientes son evidencia histórica; la app actual es exclusiva de Cálculo y ya no tiene selección de materias.
+
 Verificación en `codex/calculo-integracion`, 20 de noviembre de 2026. La rama parte de `develop`, recupera el núcleo móvil de Core 2 y adapta el flujo y almacenamiento de Core 1 al contrato de Cálculo. [Swagger oficial](https://backend-virtu.onrender.com/docs/).
+
+La única app de Expo arranca desde `mobile/`. Cálculo está en `mobile/src/modules/calculo/` junto a las demás materias y usa la configuración original, trasladada a `mobile/src/config/apiConfig.js`.
 
 | Ticket | Dependencias y evidencia |
 | --- | --- |

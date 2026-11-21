@@ -18,7 +18,9 @@ describe('GlossaryScreen', () => {
       ['Carbono', ['Símbolo: C', 'Número atómico: 6', 'Propiedades: No metal, Presente en moléculas orgánicas']],
     ] as const) {
       await fireEvent.press(screen.getByRole('button', { name: new RegExp(title) }));
-      for (const field of fields) expect(screen.getByText(field)).toBeTruthy();
+      for (const field of fields) expect(field.startsWith('Representación: ')
+        ? screen.getByLabelText(`Fórmula: ${field.slice('Representación: '.length)}`)
+        : screen.getByText(field)).toBeTruthy();
       await fireEvent.press(screen.getByRole('button', { name: 'Volver a la lista' }));
       expect(screen.getByText('Función cuadrática')).toBeTruthy();
     }
