@@ -86,3 +86,15 @@ Con autorización expresa posterior del usuario para utilizar las cuentas de pru
 8. GET `/contenidos/calculo` confirmó la asociación y estado `ESTUDIADO`. El estado ya era `ESTUDIADO` antes del intento: no se reinició ni alteró artificialmente el progreso para demostrar una transición.
 
 Estos pasos crearon registros reales en el backend publicado, exclusivamente mediante su API y con las cuentas de prueba autorizadas. No se guardaron contraseñas ni tokens en archivos del proyecto. El flujo remoto ya está verificado a nivel API; su conexión con las pantallas sigue siendo dependencia T04/T05. La restricción de solo consulta del docente dentro de la app se conserva, aunque la cuenta de prueba permita operaciones administrativas desde la API.
+
+## T09 / T10: contrato del panel docente de solo lectura
+
+Se volvió a consultar el OpenAPI 3.0.3, contrato 1.2.0, servido en `https://backend-virtu.onrender.com/docs/swagger-ui-init.js`. Los ejemplos siguientes son los ejemplos publicados por Swagger; no se presentan como respuestas reales de esta ejecución:
+
+- `GET /docente/cursos`: array de `{ id, nombre, colegio: { id, nombre }, totalEstudiantes }`.
+- `GET /docente/cursos/{cursoId}/estudiantes`: `{ curso: { id, nombre }, totalEstudiantes, estudiantes: [{ estudianteId, nombreCompleto, username, totalUnidades, unidadesEstudiadas, porcentajeAvance, promedioNotas }] }`.
+- `GET /docente/estudiantes/{estudianteId}/lecciones/{leccionId}`: `{ estudiante: { id, nombreCompleto, username }, leccion: { id, titulo }, tieneCuestionario, estadoLeccion, notaVigente, aprobado, aciertosTotales, desaciertosTotales, fechaEjecucion, detallePreguntas: [{ preguntaId, orden, enunciado, acerto, respuestaDadaTexto, respuestaCorrectaTexto, solucionExplicacion }] }`.
+
+Los informes de validación previos registran consultas autenticadas reales para cursos y estudiantes; el detalle docente estaba cubierto con respuestas simuladas en pruebas, no con una consulta real autenticada. En esta implementación se conserva el contrato de campos de Swagger; valores ausentes se presentan como «No disponible», sin convertir ni recalcular notas.
+
+**Alcance de los agregados:** la descripción del endpoint de estudiantes define el avance por unidades y el promedio de notas como métricas agregadas y no ofrece parámetro/filtro de materia. El informe de alcance anterior indica que combina materias. Por eso el panel lo rotula como global y muestra una advertencia; la selección de lecciones que conduce al reporte T10 se limita al catálogo obtenido por `GET /contenidos/calculo`. Confirmar con Backend si más adelante se necesita que las métricas de T09 sean exclusivas de Cálculo.

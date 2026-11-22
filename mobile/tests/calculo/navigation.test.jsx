@@ -15,7 +15,7 @@ test.each(['ESTUDIANTE', 'DOCENTE'])('opens the correct home for %s without fetc
   const request = jest.fn().mockResolvedValue(rol === 'ESTUDIANTE' ? { slug: 'calculo', unidades: [] } : []);
   useAuth.mockReturnValue({ user: { rol, nombreCompleto: 'Prueba' }, request });
   await render(page());
-  expect(await screen.findByText(rol === 'ESTUDIANTE' ? 'Inicio de Cálculo' : 'Inicio docente')).toBeTruthy();
+  expect(await screen.findByText(rol === 'ESTUDIANTE' ? 'Inicio de Cálculo' : 'Panel docente')).toBeTruthy();
   expect(request).toHaveBeenCalledWith(rol === 'ESTUDIANTE' ? '/contenidos/calculo' : '/docente/cursos');
   expect(request).not.toHaveBeenCalledWith('/contenidos');
   expect(screen.queryByText('Elige una materia')).toBeNull();
