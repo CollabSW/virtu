@@ -26,7 +26,7 @@ test('refreshes the backend state after marking a lesson and returns to updated 
   useAuth.mockReturnValue({ request });
   await render(<UnitsScreen />);
   await fireEvent.press(await screen.findByRole('button', { name: 'Abrir La regla' }));
-  await fireEvent.press(await screen.findByRole('button', { name: 'Marcar como estudiada' }));
+  await fireEvent.press(await screen.findByRole('button', { name: 'Marcar como estudiado' }));
   await waitFor(() => expect(request).toHaveBeenCalledWith('/lecciones/22/marcar-estudiado', {}));
   expect(await screen.findByText('Estado: ESTUDIADO')).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Volver a unidades' }));

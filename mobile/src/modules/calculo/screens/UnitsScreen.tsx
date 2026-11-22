@@ -1,11 +1,12 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/shared/components/Button';
 import { useAuth } from '@/shared/context/AuthContext';
 import { getAttemptHistory, getProgress } from '@/shared/services/progressService';
 import { APP_SLUG } from '@/config/apiConfig';
+import { colors } from '@/config/theme';
 import LessonScreen from './LessonScreen';
 import ProgressOverview from '../components/ProgressOverview';
 import { useMatiasDesign } from '../components/matiasDesign';
@@ -77,33 +78,62 @@ export default function UnitsScreen({ progressOnly = false, onClose }: { progres
   </View>;
 
   return (
-    <View style={{ gap: 12 }}>
-      <ThemedText type="subtitle">Mi progreso</ThemedText>
-      {loading ? <ActivityIndicator accessibilityLabel="Cargando progreso" /> : error ? (
-        <ThemedText accessibilityRole="alert">{error}</ThemedText>
-      ) : units.length === 0 ? <ThemedText>Aún no hay unidades disponibles.</ThemedText> : units.map(unit => (
-        <View key={unit.id} style={{ gap: 8 }}>
-          <ThemedText>{unit.titulo} · {unit.estadoUnidad}</ThemedText>
-          {unit.lecciones.map(item => {
-            const { cuestionarioId, titulo } = item;
-            return (
-              <View key={item.id} style={{ gap: 6 }}>
-                <ThemedText>{titulo} · {item.estado}</ThemedText>
-                <Button title="Abrir lección" accessibilityLabel={`Abrir ${titulo}`}
-                  onPress={() => setOpenedLesson(item.id)} />
-                {item.tieneCuestionario && typeof cuestionarioId === 'number'
-                  && Number.isInteger(cuestionarioId) && cuestionarioId > 0 && (
-                  <Button title="Ver historial" accessibilityLabel={`Ver historial de ${titulo}`}
-                    onPress={() => setLesson({ titulo, cuestionarioId })} />
-                )}
+    <ScrollView style={progressStyles.screen} contentContainerStyle={progressStyles.content}>
+      <Card style={progressStyles.hero}>
+        <ThemedText accessibilityRole="header" style={progressStyles.heroTitle}>Cálculo</ThemedText>
+        <ThemedText style={progressStyles.heroBody}>Resumen de unidades y lecciones</ThemedText>
+      </Card>
+      {loading ? <View style={progressStyles.center}><ActivityIndicator accessibilityLabel="Cargando progreso" color={colors.primary} /></View>
+        : error ? (
+          <View style={progressStyles.center} accessibilityRole="alert">
+            <ThemedText style={progressStyles.error}>{error}</ThemedText>
+            <Button title="Reintentar" onPress={() => void refresh()} />
+          </View>
+        ) : units.length === 0 ? (
+          <View style={progressStyles.center}>
+            <ThemedText style={progressStyles.empty}>Aún no hay unidades disponibles.</ThemedText>
+            <Button title="Actualizar progreso" disabled={loading} onPress={() => void refresh()} />
+          </View>
+        ) : units.map((unit, unitIndex) => (
+          <Card key={unit.id} style={progressStyles.unitCard}>
+            <View style={progressStyles.unitHeading}>
+              <View style={progressStyles.grow}>
+                <ThemedText style={progressStyles.unitStatus}>Unidad {unitIndex + 1} · {unit.estadoUnidad}</ThemedText>
+                <ThemedText accessibilityRole="header" style={progressStyles.unitTitle}>{unit.titulo}</ThemedText>
               </View>
-            );
-          })}
-        </View>
-      ))}
-      <Button title={error ? 'Reintentar progreso' : 'Actualizar progreso'} disabled={loading}
-        onPress={() => void refresh()} />
-    </View>
+            </View>
+            {unit.lecciones.map((item, lessonIndex) => {
+              const { cuestionarioId, titulo } = item;
+              return (
+                <View key={item.id} style={progressStyles.lessonRow}>
+                  <View style={progressStyles.lessonNumber}>
+                    <ThemedText style={progressStyles.lessonNumberText}>{lessonIndex + 1}</ThemedText>
+                  </View>
+                  <View style={progressStyles.lessonInfo}>
+                    <ThemedText style={progressStyles.lessonTitle}>{titulo} · {item.estado}</ThemedText>
+                    <ThemedText style={[
+                      progressStyles.statusBadge,
+                      item.estado === 'ESTUDIADO' ? progressStyles.studied : progressStyles.pending,
+                    ]}>{item.estado}</ThemedText>
+                  </View>
+                  <Button title="Abrir lección" accessibilityLabel={`Abrir ${titulo}`}
+                    onPress={() => setOpenedLesson(item.id)}
+                    style={progressStyles.openButton} textStyle={progressStyles.openText} />
+                  {item.tieneCuestionario && typeof cuestionarioId === 'number'
+                    && Number.isInteger(cuestionarioId) && cuestionarioId > 0 && (
+                    <Button title="Ver historial" accessibilityLabel={`Ver historial de ${titulo}`}
+                      onPress={() => setLesson({ titulo, cuestionarioId })}
+                      style={progressStyles.historyButton} textStyle={progressStyles.openText} />
+                  )}
+                </View>
+              );
+            })}
+          </Card>
+        ))}
+      {!loading && !error && units.length > 0 &&
+        <Button title="Actualizar progreso" disabled={loading} onPress={() => void refresh()}
+          style={progressStyles.updateButton} />}
+    </ScrollView>
   );
 }
 
@@ -158,6 +188,31 @@ function AttemptHistory({ lesson, close }: { lesson: { titulo: string; cuestiona
 
 const progressStyles = StyleSheet.create({
   page: { gap: 12, padding: 16, marginHorizontal: -20 },
+  screen: { flex: 1, backgroundColor: '#F8F9FF' },
+  content: { width: '100%', maxWidth: 800, alignSelf: 'center', padding: 16, gap: 12, paddingBottom: 40 },
+  hero: { backgroundColor: colors.primary, borderRadius: 12, padding: 20, gap: 4 },
+  heroTitle: { color: '#FFFFFF', fontSize: 24, lineHeight: 32, fontWeight: '700' },
+  heroBody: { color: '#FFFFFF', fontSize: 16, lineHeight: 24 },
+  center: { gap: 12, alignItems: 'center', paddingVertical: 24 },
+  error: { color: colors.text, fontSize: 16, textAlign: 'center' },
+  empty: { color: '#434655', fontSize: 16, textAlign: 'center' },
+  unitCard: { backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: '#C3C5D7', padding: 16, gap: 12 },
+  unitHeading: { flexDirection: 'row', alignItems: 'center' },
+  grow: { flex: 1, minWidth: 0 },
+  unitStatus: { color: '#434655', fontSize: 16 },
+  unitTitle: { color: colors.text, fontSize: 18, lineHeight: 26, fontWeight: '700' },
+  lessonRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, borderTopWidth: 1, borderTopColor: '#E5EEFF', paddingTop: 12 },
+  lessonNumber: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#E5EEFF', alignItems: 'center', justifyContent: 'center' },
+  lessonNumberText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
+  lessonInfo: { flex: 1, minWidth: 160, gap: 4 },
+  lessonTitle: { color: colors.text, fontSize: 16, lineHeight: 22 },
+  statusBadge: { alignSelf: 'flex-start', borderRadius: 8, paddingVertical: 4, paddingHorizontal: 8, fontSize: 14, overflow: 'hidden' },
+  studied: { color: '#006A65', backgroundColor: '#DEFBF8' },
+  pending: { color: '#434655', backgroundColor: '#E5EEFF' },
+  openButton: { minHeight: 48, borderRadius: 8, backgroundColor: '#E5EEFF', paddingHorizontal: 12 },
+  openText: { color: colors.primary, fontSize: 16 },
+  historyButton: { minHeight: 48, borderRadius: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#C3C5D7', paddingHorizontal: 12 },
+  updateButton: { minHeight: 48, borderRadius: 8, backgroundColor: colors.primary },
   title: { fontSize: 28, lineHeight: 36, letterSpacing: -0.7 },
   button: { minHeight: 48, borderRadius: 8, paddingVertical: 12 },
   attempt: { borderRadius: 12, padding: 16, gap: 8 },
