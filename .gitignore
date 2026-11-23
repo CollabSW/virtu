@@ -163,3 +163,6 @@ yarn-error.*
 .env*.local
 /ios
 /android
+
+# Local browser validation artifacts
+.playwright-mcp/
