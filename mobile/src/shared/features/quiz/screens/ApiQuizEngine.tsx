@@ -4,26 +4,32 @@ import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Button } from '@/shared/components/Button';
+import { Card } from '@/shared/components/Card';
+import { Header } from '@/shared/components/Header';
 import { useTheme } from '@/hooks/use-theme';
 import { QuestionCard } from '../components/QuestionCard';
 import { FeedbackModal } from '../components/FeedbackModal';
 import { startQuiz, answerQuestion, finishQuiz } from '../quizService';
 
-// Interfaz adaptada para el componente visual
 type UIQuestion = {
   id: string;
   text: string;
   options: { id: string; text: string }[];
 };
 
+type ServerFeedback = {
+  isCorrect: boolean;
+  explanation: string;
+  correctOptionText: string;
+};
+
 type Props = {
   quizId: number;
   lessonId: number;
   request: (url: string, body: any) => Promise<any>;
-  onFinish?: (result: any) => void;
 };
 
-export function ApiQuizEngine({ quizId, lessonId, request, onFinish }: Props) {
+export function ApiQuizEngine({ quizId, lessonId, request }: Props) {
   const theme = useTheme();
   
   // Estados
@@ -36,37 +42,47 @@ export function ApiQuizEngine({ quizId, lessonId, request, onFinish }: Props) {
   // Estados de la pregunta actual
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<{ isCorrect: boolean } | null>(null);
+  const [feedback, setFeedback] = useState<ServerFeedback | null>(null);
 
-  // 1. Iniciar el Quiz (POST /cuestionarios/:id/iniciar)
-  useEffect(() => {
-    async function initQuiz() {
-      try {
-        const data = await startQuiz(request, quizId, lessonId);
-        setAttemptId(data.intentoId);
-        
-        // Mapeamos los datos de la API a lo que espera QuestionCard
-        const mappedQuestions = data.preguntas.map((q: any) => ({
-          id: String(q.id),
-          text: q.enunciado,
-          options: q.opciones.map((o: any) => ({ id: String(o.id), text: o.texto })),
-        }));
-        
-        setQuestions(mappedQuestions);
-      } catch (err: any) {
-        setError(err.message || 'Error al iniciar el cuestionario');
-      } finally {
-        setLoading(false);
-      }
+  // Estado para la pantalla final (respuesta oficial del backend)
+  const [finalResult, setFinalResult] = useState<any | null>(null);
+
+  // 1. Iniciar el Quiz
+  const initQuiz = async () => {
+    setLoading(true);
+    setError(null);
+    setFinalResult(null);
+    setCurrentIndex(0);
+    setSelectedOptionId(null);
+    setFeedback(null);
+
+    try {
+      const data = await startQuiz(request, quizId, lessonId);
+      setAttemptId(data.intentoId);
+      
+      const mappedQuestions = data.preguntas.map((q: any) => ({
+        id: String(q.id),
+        text: q.enunciado,
+        options: q.opciones.map((o: any) => ({ id: String(o.id), text: o.texto })),
+      }));
+      
+      setQuestions(mappedQuestions);
+    } catch (err: any) {
+      setError(err.message || 'Error al iniciar el cuestionario');
+    } finally {
+      setLoading(false);
     }
-    initQuiz();
-  }, [quizId, lessonId, request]);
+  };
 
-  // 2. Confirmar respuesta (POST /intentos/:intentoId/responder)
+  useEffect(() => {
+    initQuiz();
+  }, [quizId, lessonId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 2. Confirmar respuesta
   const handleConfirm = async () => {
     if (!selectedOptionId || !attemptId || isSubmitting) return;
     
-    setIsSubmitting(true); // Evita el doble envío
+    setIsSubmitting(true);
     const currentQuestion = questions[currentIndex];
 
     try {
@@ -76,8 +92,17 @@ export function ApiQuizEngine({ quizId, lessonId, request, onFinish }: Props) {
         Number(currentQuestion.id), 
         Number(selectedOptionId)
       );
-      // Recibimos el feedback oficial del servidor
-      setFeedback({ isCorrect: result.esCorrecta });
+      
+      // Buscamos el texto de la opción correcta usando el ID que dio el servidor
+      const correctOpt = currentQuestion.options.find(
+        (o) => o.id === String(result.opcionCorrectaId)
+      );
+
+      setFeedback({
+        isCorrect: result.esCorrecta,
+        explanation: result.explicacion || 'Sin explicación adicional.',
+        correctOptionText: correctOpt?.text || 'Desconocida',
+      });
     } catch (err: any) {
       setError(err.message || 'Error al enviar la respuesta');
     } finally {
@@ -85,20 +110,23 @@ export function ApiQuizEngine({ quizId, lessonId, request, onFinish }: Props) {
     }
   };
 
-  // 3. Avanzar a la siguiente pregunta o finalizar
+  // 3. Avanzar o finalizar
   const handleNext = async () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setSelectedOptionId(null);
       setFeedback(null);
     } else {
-      // Era la última pregunta
+      // Era la última pregunta, finalizamos el intento en el servidor
       if (attemptId) {
+        setLoading(true);
         try {
-          const finalResult = await finishQuiz(request, attemptId);
-          if (onFinish) onFinish(finalResult);
-        } catch (err) {
-          setError('Error al finalizar el cuestionario');
+          const result = await finishQuiz(request, attemptId);
+          setFinalResult(result); // Guardamos la nota oficial del backend
+        } catch (err: any) {
+          setError(err.message || 'Error al finalizar el cuestionario');
+        } finally {
+          setLoading(false);
         }
       }
     }
@@ -108,7 +136,7 @@ export function ApiQuizEngine({ quizId, lessonId, request, onFinish }: Props) {
     return (
       <ThemedView style={styles.centered}>
         <ActivityIndicator size="large" color={theme.success} />
-        <ThemedText style={{ marginTop: 16 }}>Iniciando cuestionario...</ThemedText>
+        <ThemedText style={{ marginTop: 16 }}>Cargando...</ThemedText>
       </ThemedView>
     );
   }
@@ -117,7 +145,29 @@ export function ApiQuizEngine({ quizId, lessonId, request, onFinish }: Props) {
     return (
       <ThemedView style={styles.centered}>
         <ThemedText themeColor="textSecondary">{error}</ThemedText>
+        <Button title="Volver a intentar" onPress={initQuiz} style={{ marginTop: 20 }} />
       </ThemedView>
+    );
+  }
+
+  // PANTALLA FINAL: Muestra estrictamente lo que dijo el backend
+  if (finalResult) {
+    return (
+      <ScrollView contentContainerStyle={styles.content}>
+        <Card style={styles.resultSummary}>
+          <Header title={finalResult.aprobado ? '¡Cuestionario aprobado!' : 'Sigue practicando'} />
+          <ThemedText type="title" style={styles.score}>
+            {finalResult.calificacion}
+          </ThemedText>
+          <ThemedText>{finalResult.aciertos} de {finalResult.totalPreguntas} respuestas correctas</ThemedText>
+        </Card>
+        
+        <Button 
+          title="Intentar de nuevo" 
+          onPress={initQuiz} 
+          style={{ marginTop: 16 }} 
+        />
+      </ScrollView>
     );
   }
 
@@ -134,7 +184,6 @@ export function ApiQuizEngine({ quizId, lessonId, request, onFinish }: Props) {
           Pregunta {currentIndex + 1} de {questions.length}
         </ThemedText>
 
-        {/* Barra de progreso simple */}
         <View style={styles.track}>
           <View style={[styles.progress, { width: `${((currentIndex + 1) / questions.length) * 100}%` }]} />
         </View>
@@ -142,20 +191,19 @@ export function ApiQuizEngine({ quizId, lessonId, request, onFinish }: Props) {
         <QuestionCard
           question={question}
           selectedOptionId={selectedOptionId}
-          // Bloqueamos la tarjeta si está enviando o si ya hay feedback
           disabled={isSubmitting || !!feedback}
           onSelect={setSelectedOptionId}
           onConfirm={handleConfirm}
         />
 
-        {/* Botón extra por si el FeedbackModal no maneja el avance automático */}
         {isSubmitting && <ActivityIndicator style={{ marginTop: 16 }} />}
       </ScrollView>
 
       <FeedbackModal
         visible={!!feedback}
         isCorrect={feedback?.isCorrect ?? false}
-        explanation="El servidor ha registrado tu respuesta." // La API real no envía explicación, así que ponemos un texto genérico
+        explanation={feedback?.explanation ?? ''}
+        correctOptionText={feedback?.correctOptionText}
         onContinue={handleNext}
       />
     </ThemedView>
@@ -176,4 +224,6 @@ const styles = StyleSheet.create({
   eyebrow: { letterSpacing: 1.5 },
   track: { height: 6, borderRadius: 8, backgroundColor: '#d8ddd9', overflow: 'hidden' },
   progress: { height: '100%', backgroundColor: '#39866b', borderRadius: 8 },
+  resultSummary: { alignItems: 'center', padding: 24, borderRadius: 24, gap: 8 },
+  score: { fontSize: 48, lineHeight: 56 },
 });

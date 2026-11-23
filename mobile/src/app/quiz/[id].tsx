@@ -2,14 +2,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { ApiQuizEngine } from '@/shared/features/quiz/screens/ApiQuizEngine';
 
-// TODO: Importar tu función request real desde '@/config/apiConfig'
-// Ejemplo: import { request } from '@/config/apiConfig';
 const mockRequest = async (url: string, body: any) => {
-  console.log("Llamando a:", url, body);
-  // Simulamos un retraso de red de 1 segundo
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 800)); // Simula latencia
   
-  // Simulamos la respuesta de la API para que puedas probar
   if (url.includes('iniciar')) {
     return {
       intentoId: 1,
@@ -18,7 +13,7 @@ const mockRequest = async (url: string, body: any) => {
       preguntas: Array.from({ length: 5 }).map((_, i) => ({
         id: i + 1,
         orden: i,
-        enunciado: `¿Pregunta de prueba número ${i + 1}?`,
+        enunciado: `¿Pregunta de prueba ${i + 1}?`,
         opciones: [
           { id: 1, texto: 'Opción A' },
           { id: 2, texto: 'Opción B' },
@@ -28,18 +23,31 @@ const mockRequest = async (url: string, body: any) => {
       })),
     };
   }
+  
   if (url.includes('responder')) {
-    return { preguntaId: body.preguntaId, esCorrecta: Math.random() > 0.5 }; // Simula acierto/error
+    const isCorrect = body.opcionSeleccionadaId === 1; // Si elige la opción A, es correcta
+    return { 
+      preguntaId: body.preguntaId, 
+      esCorrecta: isCorrect,
+      explicacion: "Esta es la explicación oficial que envía el backend sobre el tema.",
+      opcionCorrectaId: 1 // El ID de la opción correcta
+    };
   }
+  
   if (url.includes('finalizar')) {
-    return { intentoId: 1, totalPreguntas: 5, aciertos: 4, aprobado: true, calificacion: 80 };
+    // El backend simula que acertaste 4 de 5
+    return { 
+      intentoId: 1, 
+      totalPreguntas: 5, 
+      aciertos: 4, 
+      aprobado: true, 
+      calificacion: "80/100" // Enviamos string para probar que no hacemos matemáticas locales
+    };
   }
 };
 
 export default function QuizRoute() {
   const { id } = useLocalSearchParams();
-  
-  // Asumimos que el id de la ruta es el quizId, y el lessonId viene por parámetro o está fijo
   const quizId = Number(id) || 1;
   const lessonId = 101; 
 
@@ -48,7 +56,6 @@ export default function QuizRoute() {
       quizId={quizId}
       lessonId={lessonId}
       request={mockRequest} 
-      onFinish={(res) => console.log('Quiz finalizado:', res)}
     />
   );
 }
