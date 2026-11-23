@@ -21,9 +21,9 @@ Guía principal del proyecto: qué es Virtu, cómo levantarlo y cómo trabajamos
 
 ## 1. Sobre Virtu
 
-Virtu es una app móvil educativa para estudiantes de secundaria. Reúne 6 materias: Biología, Cálculo, Física, Historia, Inglés y Química.
+Este repositorio entrega Virtu Cálculo, una aplicación móvil independiente para estudiantes de secundaria. Según CR-01, las seis materias corresponden a aplicaciones independientes; esta app solo consulta contenidos de Cálculo.
 
-Tiene dos roles: estudiante y docente. Cada materia se desarrolla como un módulo independiente sobre una base común de login, navegación, cuestionarios y glosario.
+Tiene dos roles: estudiante y docente. Reutiliza la base común de login, cuestionarios y glosario. Tras iniciar sesión, el estudiante entra directamente a Cálculo y el docente a sus cursos. No hay selección de materias. Los módulos de otras materias conservados en el árbol no están conectados a la navegación.
 
 ## 2. Equipos del proyecto
 
@@ -44,18 +44,14 @@ Tiene dos roles: estudiante y docente. Cada materia se desarrolla como un módul
 
 | Tecnología | Versión en el proyecto | Por qué |
 |---|---|---|
-| React Native con Expo | Expo SDK 58 (`expo ~58.0.23`), React Native 0.88.1 | Permite probar en el celular con Expo Go, sin instalar Android Studio ni Xcode. |
-| JavaScript | — | Lo exige el ERS; por eso no se usa TypeScript. |
+| React Native con Expo | Expo SDK 57, React Native 0.86.3 | Permite probar en el celular con Expo Go. |
+| JavaScript y TypeScript | — | JavaScript para los servicios y TypeScript donde ya se usa en componentes y rutas. |
 | npm | — | Un solo gestor de paquetes evita diferencias de versiones entre equipos. |
-| React Navigation | `@react-navigation/native ^7.5.1`, `@react-navigation/native-stack ^7.21.0` | Es la navegación elegida para el proyecto, en lugar de expo-router. |
-| axios | `^1.21.0` | Centraliza las llamadas a la API central. |
-| AsyncStorage | `@react-native-async-storage/async-storage 2.2.0` | Guarda en el celular datos locales que no son sensibles. |
-| expo-secure-store | `~58.0.2` | Guarda de forma cifrada datos sensibles, como el token de sesión. |
-| ESLint + Prettier | `eslint ^9.39.5`, `prettier ^3.9.10` | Detectan errores y mantienen el mismo formato de código en todos los equipos. |
+| Expo Router | SDK 57 | Define las rutas en `mobile/src/app/`. |
+| Expo SecureStore | SDK 57 | Guarda el token de sesión en el almacenamiento seguro del dispositivo. |
+| ESLint y Jest | — | Revisan el código y ejecutan las pruebas automatizadas. |
 
 > [!WARNING]
-> - **No instales expo-router.** La navegación se hace con React Navigation.
-> - **No uses TypeScript.** Todo el código va en `.js` o `.jsx`.
 > - **No uses yarn ni pnpm.** Solo npm.
 > - **No instales librerías con `npm install <paquete>`.** Usa `npx expo install <paquete>` para mantener versiones compatibles con el SDK. (`npm install` sin nombre de paquete sí es correcto: instala lo que el proyecto ya tiene definido).
 > - **Consulta a tu lead antes de agregar una dependencia nueva.**
@@ -84,22 +80,16 @@ git clone https://github.com/CollabSW/virtu.git
 cd virtu
 ```
 
-**2. Cámbiate a la rama de integración:**
+**2. Entra en la única aplicación del repositorio:**
 
 ```bash
-git checkout develop
-```
-
-Comprueba que el archivo `package.json` aparece en la raíz de la carpeta. Si no aparece, y en su lugar ves una carpeta `mobile/`, el proyecto base todavía no se integró en `develop`. En ese caso usa esta rama:
-
-```bash
-git checkout leadCore1
+cd mobile
 ```
 
 **3. Instala las dependencias:**
 
 ```bash
-npm install
+npm ci
 ```
 
 **4. Inicia sesión en Expo:**
@@ -123,7 +113,7 @@ Deja esa terminal abierta mientras trabajas. Aparecerá un código QR.
 - **Android:** desde la app Expo Go.
 - **iPhone:** con la cámara del celular.
 
-**7. Comprueba el resultado.** Si todo salió bien, verás una pantalla con la barra **Inicio** arriba y el texto **Virtu** en el centro.
+**7. Comprueba el resultado.** Verás el acceso de Virtu Cálculo. Después de iniciar sesión como estudiante, accedes directamente a Cálculo. Para crear una cuenta de estudiante, pide al colegio sus ID de colegio y de curso. Consulta los avances y bloqueos de integración en `mobile/docs/calculo-entrega.md`.
 
 **8. Recarga la app cuando la necesites.** Tienes dos formas:
 
@@ -138,32 +128,33 @@ Deja esa terminal abierta mientras trabajas. Aparecerá un código QR.
 | El celular no encuentra el servidor | Conecta el celular y la computadora a la misma red Wi-Fi. Si no funciona (por ejemplo, con el Wi-Fi de la universidad), usa `npx expo start --tunnel`. |
 | `You need to be signed in to Expo Go and Expo CLI` | Ejecuta `npx expo login` e inicia sesión en Expo Go con la misma cuenta. |
 | Puerto 8081 ocupado | Cierra el otro servidor de Expo, o responde que sí cuando la terminal pregunte si quieres usar otro puerto. |
-| Errores raros después de un `git pull` | Ejecuta `npm install` de nuevo. Si persisten, limpia la caché con `npx expo start -c`. |
+| Errores raros después de un `git pull` | Ejecuta `npm ci` de nuevo desde `mobile/`. Si persisten, limpia la caché con `npx expo start -c`. |
 | Expo Go dice que la versión del SDK no es compatible | Actualiza Expo Go desde la tienda de tu celular. |
-| Mensaje `Using src/app as the root directory for Expo Router` | Es solo informativo: ignóralo. Expo lo muestra porque existe la carpeta `src/app`, pero el proyecto no usa expo-router. |
+| Mensaje `Using src/app as the root directory for Expo Router` | Expo detectó las rutas de `mobile/src/app/`. |
 | Windows: PowerShell no deja ejecutar `npx` o `npm` (scripts deshabilitados) | Usa la terminal **Símbolo del sistema (cmd)**, o ejecuta una vez `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` en PowerShell. |
 
 ## 7. Estructura del proyecto
 
-El punto de entrada es `index.js`, que carga `App.js`, y este renderiza `src/app/App.jsx`. El código del proyecto va dentro de `src/`:
+Expo Router es el punto de entrada. Todo el código de la app está en `mobile/src/`:
 
 ```text
-src/
-├── app/                         # Componente raíz: providers y navegación (Core 1)
-│   └── App.jsx
+mobile/src/
+├── app/                         # Rutas de Expo Router
+│   ├── _layout.tsx              # Providers y navegación
+│   └── index.tsx                # Pantalla de entrada
 ├── config/                      # Configuración compartida (Core 1)
 │   ├── apiConfig.js             # URL base de la API central
 │   └── theme.js                 # Colores, tipografía y espaciados
 ├── navigation/                  # Navegadores de la app (Core 1)
-│   ├── AppNavigator.jsx         # Navegador principal
-│   └── AuthNavigator.jsx        # Navegador de autenticación
+│   ├── AppNavigator.tsx         # Navegador principal
+│   └── AuthNavigator.tsx        # Navegador de autenticación
 ├── shared/                      # Código común: los cambios se coordinan con Core 1 o Core 2
 │   ├── components/              # Componentes UI reutilizables, como Button o Card
 │   ├── features/
 │   │   ├── glossary/            # Motor de glosario (Core 2)
 │   │   ├── quiz/                # Motor de cuestionarios (Core 2)
 │   │   └── teacher-dashboard/   # Panel docente (Core 1)
-│   └── services/                # authService, cliente axios, etc. (Core 1)
+│   └── services/                # Autenticación y cliente HTTP de Virtu
 └── modules/                     # Una carpeta por materia (cada equipo de materia)
     ├── README.md
     ├── biologia/                # Equipo de Biología
@@ -177,7 +168,7 @@ src/
 Cada materia tiene la misma organización:
 
 ```text
-src/modules/historia/
+mobile/src/modules/historia/
 ├── components/   # Componentes propios de la materia
 ├── screens/      # Pantallas de la materia
 ├── services/     # Llamadas a la API de la materia
@@ -203,7 +194,7 @@ Para usarla, por ejemplo desde `src/navigation/`:
 import { HistoriaHomeScreen } from '../modules/historia';
 ```
 
-> **Nota:** las pantallas de las materias todavía no están conectadas a la navegación. Por ahora, la app solo muestra la pantalla provisional de `AppNavigator.jsx`.
+La pantalla de progreso de Cálculo está en `mobile/src/modules/calculo/screens/UnitsScreen.tsx`. Las pantallas provisionales de las demás materias se conservan en sus módulos.
 
 ## 8. Reglas de trabajo entre equipos
 
@@ -283,7 +274,7 @@ refactor(IN-03): separar la lista de vocabulario en un componente
 Estos dos comandos deben terminar sin errores:
 
 ```bash
-npm run format
+npm run typecheck
 ```
 
 ```bash
@@ -314,7 +305,7 @@ C1-05
 
 ## Checklist
 - [ ] `npm run lint` pasa sin errores
-- [ ] `npm run format` aplicado
+- [ ] `npm run typecheck` pasa sin errores
 - [ ] Probado en el celular
 - [ ] Si toca `src/shared`, avisé a Core 1 o Core 2
 ```
@@ -335,16 +326,17 @@ Si aparece un conflicto, **pide ayuda a tu lead y no borres código ajeno**.
 
 ## 10. Scripts disponibles
 
-Se ejecutan con `npm run <script>`, por ejemplo `npm run lint`. `start` también funciona como `npm start`.
+Se ejecutan desde `mobile/`, con `npm run <script>`. `start` también funciona como `npm start`.
 
 | Script | Comando | Para qué sirve |
 |---|---|---|
 | `start` | `expo start` | Inicia el servidor de desarrollo y muestra el código QR. |
 | `android` | `expo start --android` | Inicia el servidor y abre la app en un emulador o dispositivo Android conectado a la computadora. Con Expo Go no lo necesitas. |
 | `ios` | `expo start --ios` | Inicia el servidor y abre la app en el simulador de iOS (solo en Mac con Xcode). Con Expo Go no lo necesitas. |
-| `web` | `expo start --web` | Abre la versión web. Virtu es una app móvil y este modo no está configurado; no lo uses salvo que tu lead lo pida. |
-| `lint` | `eslint .` | Revisa el código y el formato, sin modificar archivos. |
-| `format` | `prettier --write .` | Da formato al código. Modifica los archivos. Los `README.md` están excluidos. |
+| `web` | `expo start --web` | Inicia la versión web para desarrollo. |
+| `lint` | `expo lint` | Revisa el código con ESLint. |
+| `typecheck` | `tsc --noEmit` | Comprueba los tipos sin generar archivos. |
+| `test` | `jest` | Ejecuta las pruebas automatizadas. |
 
 ## 11. Organización Scrum
 
